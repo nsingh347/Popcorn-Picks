@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import { useState } from 'react';
+import { motion, PanInfo } from 'framer-motion';
 import { X, Heart, Star, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,17 +16,13 @@ interface SwipeCardProps {
 export function SwipeCard({ movie, onSwipe, isActive = true, index = 0 }: SwipeCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-  
-  // Always call hooks in the same order
-  const x = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-25, 25]);
-  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
 
   const posterUrl = tmdbService.getImageUrl(movie.poster_path, 'w500');
   const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (!isActive) return;
+    
     const offset = info.offset.x;
     const velocity = info.velocity.x;
     
@@ -78,13 +74,23 @@ export function SwipeCard({ movie, onSwipe, isActive = true, index = 0 }: SwipeC
 
   return (
     <motion.div
-      ref={cardRef}
       className="absolute inset-0 swipe-card bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl cursor-grab active:cursor-grabbing"
-      style={{ x, rotate, opacity, zIndex: 20 }}
+      style={{ zIndex: 20 }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
       onDragEnd={handleDragEnd}
-      whileDrag={{ scale: 1.05 }}
+      whileDrag={{ scale: 1.05, rotate: 0 }}
+      animate={{ 
+        x: 0, 
+        rotate: 0,
+        opacity: 1
+      }}
+      exit={{
+        x: 300,
+        rotate: 25,
+        opacity: 0,
+        transition: { duration: 0.3 }
+      }}
     >
       <div className="poster-aspect relative overflow-hidden rounded-2xl">
         {!imageError && posterUrl ? (
@@ -139,21 +145,6 @@ export function SwipeCard({ movie, onSwipe, isActive = true, index = 0 }: SwipeC
             </div>
           </div>
         </div>
-
-        {/* Swipe indicators */}
-        <motion.div
-          className="absolute top-1/2 left-8 transform -translate-y-1/2 bg-red-500/20 rounded-full p-4"
-          style={{ opacity: useTransform(x, [-100, 0], [1, 0]) }}
-        >
-          <X className="w-8 h-8 text-red-400" />
-        </motion.div>
-
-        <motion.div
-          className="absolute top-1/2 right-8 transform -translate-y-1/2 bg-green-500/20 rounded-full p-4"
-          style={{ opacity: useTransform(x, [0, 100], [0, 1]) }}
-        >
-          <Heart className="w-8 h-8 text-green-400" />
-        </motion.div>
 
         {/* Vote average badge */}
         {movie.vote_average > 0 && (
