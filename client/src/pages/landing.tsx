@@ -68,7 +68,7 @@ export default function Landing() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <span className="bg-gradient-to-r from-white via-accent-gold to-netflix bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-white from-10% via-accent-gold via-50% to-netflix to-90% bg-clip-text text-transparent">
               Popcorn Picks
             </span>
           </motion.h1>
