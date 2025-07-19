@@ -18,6 +18,7 @@ export function SwipeCard({ movie, onSwipe, isActive = true, index = 0 }: SwipeC
   const [imageError, setImageError] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   
+  // Always call hooks in the same order
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
