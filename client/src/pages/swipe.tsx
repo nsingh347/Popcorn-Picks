@@ -31,6 +31,11 @@ export default function Swipe() {
   }, [moviesData]);
 
   const handleSwipe = async (direction: 'left' | 'right', movie: Movie) => {
+    // Stop at 20 swipes
+    if (swipeCount >= 20) {
+      return;
+    }
+
     const preference = direction === 'right' ? 'like' : 'dislike';
     
     // Add preference to local storage
@@ -43,8 +48,8 @@ export default function Swipe() {
     setSwipeCount(prev => prev + 1);
     setCurrentIndex(prev => prev + 1);
 
-    // Load more movies if we're running low
-    if (currentIndex >= currentMovies.length - 3) {
+    // Load more movies if we're running low and haven't reached the limit
+    if (currentIndex >= currentMovies.length - 3 && swipeCount < 19) {
       setIsLoading(true);
       try {
         const newMovies = await tmdbService.getMoviesForSwipe(Math.floor(Math.random() * 5) + 1);
@@ -125,23 +130,25 @@ export default function Swipe() {
           <div className="relative h-96 mb-20">
             <AnimatePresence>
               {/* Current Movie Card */}
-              {currentMovie && (
+              {currentMovie && swipeCount < 20 && (
                 <SwipeCard
                   key={currentMovie.id}
                   movie={currentMovie}
                   onSwipe={handleSwipe}
                   isActive={true}
+                  swipeCount={swipeCount}
                 />
               )}
               
               {/* Upcoming Cards */}
-              {upcomingMovies.map((movie, index) => (
+              {swipeCount < 20 && upcomingMovies.map((movie, index) => (
                 <SwipeCard
                   key={movie.id}
                   movie={movie}
                   onSwipe={handleSwipe}
                   isActive={false}
                   index={index + 1}
+                  swipeCount={swipeCount}
                 />
               ))}
             </AnimatePresence>
@@ -217,8 +224,34 @@ export default function Swipe() {
           </motion.div>
         )}
 
+        {/* Completed 20 swipes */}
+        {swipeCount >= 20 && (
+          <div className="text-center">
+            <div className="text-6xl mb-4">🎉</div>
+            <h3 className="text-2xl font-bold mb-4">Great job! You've completed 20 swipes!</h3>
+            <p className="text-gray-400 mb-6">
+              You've discovered your preferences by swiping through 20 movies.
+              {hasPreferences ? ' Now check out your personalized recommendations!' : ' Start again to discover more.'}
+            </p>
+            <div className="flex justify-center space-x-4">
+              <Button onClick={resetSwipes} variant="outline">
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Start Over
+              </Button>
+              {hasPreferences && (
+                <Link href="/recommendations">
+                  <Button className="bg-netflix hover:bg-red-700">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    View Recommendations
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* No more movies */}
-        {currentIndex >= currentMovies.length && !isLoading && (
+        {currentIndex >= currentMovies.length && !isLoading && swipeCount < 20 && (
           <div className="text-center">
             <div className="text-6xl mb-4">🎬</div>
             <h3 className="text-2xl font-bold mb-4">That's all for now!</h3>

@@ -11,9 +11,10 @@ interface SwipeCardProps {
   onSwipe: (direction: 'left' | 'right', movie: Movie) => void;
   isActive?: boolean;
   index?: number;
+  swipeCount?: number;
 }
 
-export function SwipeCard({ movie, onSwipe, isActive = true, index = 0 }: SwipeCardProps) {
+export function SwipeCard({ movie, onSwipe, isActive = true, index = 0, swipeCount = 0 }: SwipeCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -21,7 +22,7 @@ export function SwipeCard({ movie, onSwipe, isActive = true, index = 0 }: SwipeC
   const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (!isActive) return;
+    if (!isActive || swipeCount >= 20) return;
     
     const offset = info.offset.x;
     const velocity = info.velocity.x;
@@ -33,6 +34,7 @@ export function SwipeCard({ movie, onSwipe, isActive = true, index = 0 }: SwipeC
   };
 
   const handleButtonSwipe = (direction: 'left' | 'right') => {
+    if (swipeCount >= 20) return;
     onSwipe(direction, movie);
   };
 
