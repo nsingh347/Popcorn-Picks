@@ -26,6 +26,13 @@ export function MovieDetailModal({ movieId, isOpen, onClose }: MovieDetailModalP
     enabled: !!movieId && isOpen,
   });
 
+  // Fetch watch providers
+  const { data: watchProviders, isLoading: isLoadingProviders } = useQuery({
+    queryKey: ['watch-providers', movieId],
+    queryFn: () => movieId ? tmdbService.getWatchProviders(movieId) : [],
+    enabled: !!movieId && isOpen,
+  });
+
   const isMovieInWatchlist = movie ? isInWatchlist(movie.id) : false;
   
   const handleWatchlistToggle = () => {
@@ -199,6 +206,24 @@ export function MovieDetailModal({ movieId, isOpen, onClose }: MovieDetailModalP
                       <Play className="w-4 h-4 mr-2" />
                       Watch Trailer
                     </Button>
+                  )}
+                </div>
+
+                {/* Streaming Platforms */}
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold mb-2">Available On</h3>
+                  {isLoadingProviders ? (
+                    <span className="text-gray-400">Loading platforms...</span>
+                  ) : watchProviders && watchProviders.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {watchProviders.map((provider) => (
+                        <Badge key={provider} className="bg-blue-700/80 text-white border-blue-400/40">
+                          {provider}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">Not available for streaming</span>
                   )}
                 </div>
 

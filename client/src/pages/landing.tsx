@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'wouter';
-import { Play, ChevronDown, Heart, Film, List, Star } from 'lucide-react';
+import { Play, ChevronDown, Heart, Film, List, Star, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { tmdbService } from '@/services/tmdb';
@@ -63,13 +63,13 @@ export default function Landing() {
         {/* Hero Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
           <motion.h1
-            className="font-bold text-6xl md:text-8xl mb-6"
+            className="font-display font-bold text-6xl md:text-8xl mb-6"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
             <span className="text-white">
-              Popcorn Picks
+              Popcorn <span className="text-netflix">Picks</span>
             </span>
           </motion.h1>
           
@@ -104,14 +104,20 @@ export default function Landing() {
                 Start Swiping
               </Button>
             </Link>
-            
-            <Button 
-              variant="outline"
-              className="glass-effect hover:bg-white/20 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105 border-white/20 text-white"
-            >
-              <Film className="w-5 h-5 mr-2" />
-              Watch Demo
-            </Button>
+            <Link href="/auth/register">
+              <Button className="bg-white text-netflix hover:bg-gray-100 px-8 py-4 rounded-full font-semibold text-lg border-2 border-netflix transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                Sign Up
+              </Button>
+            </Link>
+            <Link href="/couples">
+              <Button 
+                variant="outline"
+                className="glass-effect hover:bg-white/20 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105 border-white/20 text-black bg-white/90 hover:bg-white hover:text-black"
+              >
+                <Heart className="w-5 h-5 mr-2" />
+                Couples Corner
+              </Button>
+            </Link>
           </motion.div>
         </div>
         
@@ -145,7 +151,7 @@ export default function Landing() {
           </motion.div>
           
           {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 xl:grid-cols-6 gap-8">
             <motion.div
               className="glass-effect rounded-2xl p-8 text-center hover:scale-105 transition-all duration-300"
               initial={{ y: 50, opacity: 0 }}
@@ -193,6 +199,54 @@ export default function Landing() {
                 Build and manage your personalized watchlist with movies you love.
               </p>
             </motion.div>
+
+            <motion.div
+              className="glass-effect rounded-2xl p-8 text-center hover:scale-105 transition-all duration-300"
+              initial={{ y: 50, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-16 h-16 bg-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Users className="w-8 h-8 text-pink-500" />
+              </div>
+              <h3 className="text-xl font-bold mb-4">Couples Corner</h3>
+              <p className="text-gray-300">
+                Connect with your partner and discover movies together with joint recommendations and shared watchlists.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="glass-effect rounded-2xl p-8 text-center hover:scale-105 transition-all duration-300"
+              initial={{ y: 50, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Star className="w-8 h-8 text-blue-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-4">Advanced Recommendations</h3>
+              <p className="text-gray-300">
+                Get suggestions based on your mood, special occasions, and see why each movie is recommended for you.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="glass-effect rounded-2xl p-8 text-center hover:scale-105 transition-all duration-300"
+              initial={{ y: 50, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Users className="w-8 h-8 text-purple-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-4">Personalization & Customization</h3>
+              <p className="text-gray-300">
+                Pick your favorite app theme, set your avatar, and fine-tune recommendations with genre and language filters.
+              </p>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -236,10 +290,15 @@ export default function Landing() {
           
           {/* CTA Button */}
           <div className="text-center">
+            <Link href="/auth/register">
+              <Button className="bg-accent-gold text-black hover:bg-yellow-400 px-12 py-4 rounded-full font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl mr-4">
+                Sign Up to Unlock Features
+              </Button>
+            </Link>
             <Link href="/swipe">
-              <Button className="bg-gradient-to-r from-netflix to-red-700 hover:from-red-700 hover:to-netflix px-12 py-4 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-                Discover Your Movies
-                <ChevronDown className="w-5 h-5 ml-2 rotate-[-90deg]" />
+              <Button className="bg-white text-netflix hover:bg-gray-100 px-12 py-4 rounded-full font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                <Play className="w-5 h-5 mr-2" />
+                Start Discovering Now
               </Button>
             </Link>
           </div>
@@ -304,6 +363,11 @@ export default function Landing() {
               Start swiping and building your personalized watchlist today.
             </p>
             
+            <Link href="/auth/register">
+              <Button className="bg-accent-gold text-black hover:bg-yellow-400 px-12 py-4 rounded-full font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl mr-4">
+                Sign Up to Unlock Features
+              </Button>
+            </Link>
             <Link href="/swipe">
               <Button className="bg-white text-netflix hover:bg-gray-100 px-12 py-4 rounded-full font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl">
                 <Play className="w-5 h-5 mr-2" />

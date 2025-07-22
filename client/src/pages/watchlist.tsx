@@ -126,7 +126,7 @@ export default function Watchlist() {
           <div className="glass-effect rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-green-400">
               {Math.round(watchlist.reduce((sum, movie) => {
-                return sum + (movie.runtime || 120); // Assume 120 min if no runtime
+                return sum + 120; // Assume 120 min average runtime
               }, 0) / 60)}h
             </div>
             <div className="text-sm text-gray-400">Total Time</div>

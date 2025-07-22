@@ -39,6 +39,18 @@ export function useSwipePreferences() {
       .map(([genreId]) => parseInt(genreId));
   };
 
+  const getLikedMovieIds = (): number[] => {
+    return preferences
+      .filter(p => p.preference === 'like')
+      .map(p => p.movieId);
+  };
+
+  const getDislikedMovieIds = (): number[] => {
+    return preferences
+      .filter(p => p.preference === 'dislike')
+      .map(p => p.movieId);
+  };
+
   const clearPreferences = () => {
     setPreferences([]);
     localStorage.removeItem(STORAGE_KEY);
@@ -48,6 +60,8 @@ export function useSwipePreferences() {
     preferences,
     addPreference,
     getLikedGenres,
+    getLikedMovieIds,
+    getDislikedMovieIds,
     clearPreferences,
     hasPreferences: preferences.length > 0
   };

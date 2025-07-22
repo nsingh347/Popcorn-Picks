@@ -5,12 +5,26 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Playfair Display', 'serif'],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
+        // Custom movie app colors
+        'deep-black': '#0a0a0a',
+        'dark-char': '#1a1a1a',
+        'netflix': '#e50914',
+        'accent-gold': '#ffd700',
+        'movie-purple': '#8b5cf6',
+        'cinema-blue': '#3b82f6',
+        'poster-red': '#ef4444',
+        'credits-gray': '#6b7280',
+        
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
