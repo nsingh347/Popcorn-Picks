@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import type { User, AuthState, LoginCredentials, RegisterData } from '@/types/user';
+import { supabase } from '@/lib/supabaseClient';
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -79,26 +80,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_ERROR', payload: null });
 
     try {
-      // TODO: Replace with actual API call
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockUser: User = {
-        id: '1',
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
-        username: credentials.email.split('@')[0],
-        displayName: credentials.email.split('@')[0],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      // Store in localStorage for now
-      localStorage.setItem('auth_token', 'mock_token');
-      localStorage.setItem('user_data', JSON.stringify(mockUser));
-      
-      dispatch({ type: 'SET_USER', payload: mockUser });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
+        password: credentials.password,
+      });
+      if (error) throw error;
+      const user = data.user;
+      if (!user) throw new Error('No user returned');
+      localStorage.setItem('auth_token', data.session?.access_token || '');
+      localStorage.setItem('user_data', JSON.stringify(user));
+      dispatch({ type: 'SET_USER', payload: user });
+    } catch (error: any) {
+      dispatch({ type: 'SET_ERROR', payload: error.message || 'Login failed' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
@@ -109,24 +102,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_ERROR', payload: null });
 
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockUser: User = {
-        id: '1',
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email: data.email,
-        username: data.username,
-        displayName: data.displayName,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      localStorage.setItem('auth_token', 'mock_token');
-      localStorage.setItem('user_data', JSON.stringify(mockUser));
-      
-      dispatch({ type: 'SET_USER', payload: mockUser });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Registration failed' });
+        password: data.password,
+        options: {
+          data: {
+            username: data.username,
+            displayName: data.displayName,
+          },
+        },
+      });
+      if (error) throw error;
+      const user = signUpData.user;
+      if (!user) throw new Error('No user returned');
+      localStorage.setItem('auth_token', signUpData.session?.access_token || '');
+      localStorage.setItem('user_data', JSON.stringify(user));
+      dispatch({ type: 'SET_USER', payload: user });
+    } catch (error: any) {
+      dispatch({ type: 'SET_ERROR', payload: error.message || 'Registration failed' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
