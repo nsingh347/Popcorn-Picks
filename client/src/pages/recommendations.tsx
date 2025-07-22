@@ -207,12 +207,12 @@ export default function Recommendations() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Clear All
             </Button>
-            <Link href="/swipe">
+          <Link href="/swipe">
               <Button variant="outline" className="border-gray-600 text-gray-600 bg-white hover:bg-gray-800 hover:text-white">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Swiping
-              </Button>
-            </Link>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Swiping
+            </Button>
+          </Link>
           </div>
         </div>
 

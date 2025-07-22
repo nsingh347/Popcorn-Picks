@@ -48,15 +48,15 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <TooltipProvider>
+      <TooltipProvider>
           <AuthProvider>
             <CouplesProvider>
-              <Navigation />
-              <Router />
-              <Toaster />
+          <Navigation />
+          <Router />
+          <Toaster />
             </CouplesProvider>
           </AuthProvider>
-        </TooltipProvider>
+      </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

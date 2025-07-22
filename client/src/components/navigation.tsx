@@ -40,12 +40,12 @@ export function Navigation() {
           key={item.href} 
           href={item.href}
           className={`font-medium transition-colors hover:text-accent-gold flex items-center ${
-            location === item.href ? 'text-accent-gold' : 'text-white'
-          }`}
-          onClick={() => setIsOpen(false)}
-        >
+              location === item.href ? 'text-accent-gold' : 'text-white'
+            }`}
+            onClick={() => setIsOpen(false)}
+          >
           {item.icon && <item.icon className="w-4 h-4 mr-1" />}
-          {item.label}
+            {item.label}
         </Link>
       ))}
       
@@ -91,14 +91,14 @@ export function Navigation() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Link href="/swipe">
-            <Button 
-              className="bg-netflix hover:bg-red-700 text-white font-medium transition-all duration-300 hover:scale-105"
-              onClick={() => setIsOpen(false)}
-            >
-              Start Swiping
-            </Button>
-          </Link>
+      <Link href="/swipe">
+        <Button 
+          className="bg-netflix hover:bg-red-700 text-white font-medium transition-all duration-300 hover:scale-105"
+          onClick={() => setIsOpen(false)}
+        >
+          Start Swiping
+        </Button>
+      </Link>
         </div>
       )}
     </>
@@ -109,8 +109,8 @@ export function Navigation() {
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <Play className="text-netflix text-2xl" />
-            <span className="font-bold text-2xl">Popcorn Picks</span>
+              <Play className="text-netflix text-2xl" />
+              <span className="font-bold text-2xl">Popcorn Picks</span>
           </Link>
           
           {/* Desktop Navigation */}

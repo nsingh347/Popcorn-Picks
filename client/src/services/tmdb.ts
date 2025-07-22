@@ -218,7 +218,7 @@ class TMDBService {
       let allMovies: Movie[] = [];
       if (genreIds.length > 0) {
         const genrePromises = genreIds.slice(0, 5).map(genreId => this.getMoviesByGenre(genreId));
-        const genreResults = await Promise.all(genrePromises);
+      const genreResults = await Promise.all(genrePromises);
         allMovies = genreResults.flatMap(result => result.results);
       }
       // Add liked movies (with explanation)

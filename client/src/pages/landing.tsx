@@ -110,13 +110,13 @@ export default function Landing() {
               </Button>
             </Link>
             <Link href="/couples">
-              <Button 
-                variant="outline"
+            <Button 
+              variant="outline"
                 className="glass-effect hover:bg-white/20 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105 border-white/20 text-black bg-white/90 hover:bg-white hover:text-black"
-              >
+            >
                 <Heart className="w-5 h-5 mr-2" />
                 Couples Corner
-              </Button>
+            </Button>
             </Link>
           </motion.div>
         </div>

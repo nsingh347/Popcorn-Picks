@@ -271,35 +271,51 @@ export default function Couples() {
           >
             <h3 className="text-xl font-semibold text-white mb-4">Pending Requests</h3>
             <div className="space-y-4">
-              {pendingRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
-                  <div>
-                    <p className="text-white font-medium">Relationship Request</p>
-                    <p className="text-gray-400 text-sm">
-                      Requested on {new Date(request.requestedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      onClick={() => { acceptRelationshipRequest(request.id); window.sessionStorage.setItem('justAcceptedCouple', 'true'); }}
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <UserCheck className="w-4 h-4 mr-1" />
-                      Accept
-                    </Button>
-                    <Button
-                      onClick={() => declineRelationshipRequest(request.id)}
-                      size="sm"
-                      variant="outline"
-                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                    >
-                      <UserX className="w-4 h-4 mr-1" />
-                      Decline
-                    </Button>
-                  </div>
-                </div>
-              ))}
+              {pendingRequests
+                .filter(request => request.status === 'pending')
+                .map((request) => {
+                  const isReceiver = user.id === request.receiver_id;
+                  const isSender = user.id === request.sender_id;
+                  return (
+                    <div key={request.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                      <div>
+                        <p className="text-white font-medium">
+                          {isReceiver ? 'Request from your partner' : 'Request you sent'}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          {isReceiver ? `From: ${request.sender_id}` : `To: ${request.receiver_id}`}<br/>
+                          Requested on {new Date(request.created_at || request.requestedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        {isReceiver && (
+                          <>
+                            <Button
+                              onClick={() => { acceptRelationshipRequest(request.id); window.sessionStorage.setItem('justAcceptedCouple', 'true'); }}
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <UserCheck className="w-4 h-4 mr-1" />
+                              Accept
+                            </Button>
+                            <Button
+                              onClick={() => declineRelationshipRequest(request.id)}
+                              size="sm"
+                              variant="outline"
+                              className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                            >
+                              <UserX className="w-4 h-4 mr-1" />
+                              Decline
+                            </Button>
+                          </>
+                        )}
+                        {isSender && (
+                          <span className="text-gray-400 text-xs">Waiting for response</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           </motion.div>
         )}

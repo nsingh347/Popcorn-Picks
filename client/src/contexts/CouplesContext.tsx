@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import type { User, Relationship, CouplePreferences } from '@/types/user';
 import { useAuth } from './AuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 interface CouplesState {
   currentRelationship: Relationship | null;
@@ -92,122 +93,95 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user) {
       loadCoupleData();
+      fetchPendingRequests();
     }
   }, [user]);
 
+  // Fetch pending relationship requests for the current user
+  const fetchPendingRequests = async () => {
+    if (!user) return;
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const { data, error } = await supabase
+        .from('relationship_requests')
+        .select('*')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+      if (error) throw error;
+      // Map to Relationship type if needed
+      dispatch({ type: 'SET_PENDING_REQUESTS', payload: data || [] });
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch requests' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  // Load couple data (accepted relationship)
   const loadCoupleData = async () => {
     if (!user) return;
-
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // TODO: Replace with actual API calls
-      // For now, load from localStorage
-      const relationshipData = localStorage.getItem(`relationship_${user.id}`);
-      const preferencesData = localStorage.getItem(`couple_preferences_${user.id}`);
-      
-      if (relationshipData) {
-        const relationship = JSON.parse(relationshipData);
-        dispatch({ type: 'SET_RELATIONSHIP', payload: relationship });
-        
-        // Mock partner data
-        const mockPartner: User = {
-          id: relationship.user1Id === user.id ? relationship.user2Id : relationship.user1Id,
-          email: 'partner@example.com',
-          username: 'partner',
-          displayName: 'Partner',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        dispatch({ type: 'SET_PARTNER', payload: mockPartner });
-      }
-
-      if (preferencesData) {
-        const preferences = JSON.parse(preferencesData);
-        dispatch({ type: 'SET_COUPLE_PREFERENCES', payload: preferences });
+      // Find accepted relationship
+      const { data, error } = await supabase
+        .from('relationship_requests')
+        .select('*')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .eq('status', 'accepted')
+        .single();
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116: No rows found
+      if (data) {
+        dispatch({ type: 'SET_RELATIONSHIP', payload: data });
+        // Optionally fetch partner info here
+      } else {
+        dispatch({ type: 'SET_RELATIONSHIP', payload: null });
       }
     } catch (error) {
-      console.error('Failed to load couple data:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to load couple data' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
+  // Send a relationship request
   const sendRelationshipRequest = async (partnerEmail: string) => {
     if (!user) return;
-
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'SET_ERROR', payload: null });
-
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockRequest: Relationship = {
-        id: `req_${Date.now()}`,
-        user1Id: user.id,
-        user2Id: 'partner_id',
-        status: 'pending',
-        requestedBy: user.id,
-        requestedAt: new Date(),
-      };
-
-      // Store in localStorage for now
-      localStorage.setItem(`relationship_request_${user.id}`, JSON.stringify(mockRequest));
-      
+      // Find partner by email
+      const { data: users, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', partnerEmail)
+        .single();
+      if (userError || !users) throw new Error('Partner not found');
+      const partnerId = users.id;
+      // Insert relationship request
+      const { error } = await supabase
+        .from('relationship_requests')
+        .insert({ sender_id: user.id, receiver_id: partnerId, status: 'pending' });
+      if (error) throw error;
       dispatch({ type: 'SET_ERROR', payload: 'Relationship request sent!' });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to send request' });
+      fetchPendingRequests();
+    } catch (error: any) {
+      dispatch({ type: 'SET_ERROR', payload: error.message || 'Failed to send request' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
+  // Accept a relationship request
   const acceptRelationshipRequest = async (requestId: string) => {
     if (!user) return;
-
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const relationship: Relationship = {
-        id: requestId,
-        user1Id: user.id,
-        user2Id: 'partner_id',
-        status: 'accepted',
-        requestedBy: 'partner_id',
-        requestedAt: new Date(),
-        acceptedAt: new Date(),
-      };
-
-      localStorage.setItem(`relationship_${user.id}`, JSON.stringify(relationship));
-      
-      // Initialize couple preferences
-      const preferences: CouplePreferences = {
-        id: `pref_${Date.now()}`,
-        coupleId: requestId,
-        combinedGenres: [],
-        sharedMovies: [],
-        jointWatchlist: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      localStorage.setItem(`couple_preferences_${user.id}`, JSON.stringify(preferences));
-      
-      dispatch({ type: 'SET_RELATIONSHIP', payload: relationship });
-      dispatch({ type: 'SET_COUPLE_PREFERENCES', payload: preferences });
-      
-      // Mock partner
-      const mockPartner: User = {
-        id: 'partner_id',
-        email: 'partner@example.com',
-        username: 'partner',
-        displayName: 'Partner',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      dispatch({ type: 'SET_PARTNER', payload: mockPartner });
+      const { error } = await supabase
+        .from('relationship_requests')
+        .update({ status: 'accepted', updated_at: new Date().toISOString() })
+        .eq('id', requestId);
+      if (error) throw error;
+      fetchPendingRequests();
+      loadCoupleData();
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to accept request' });
     } finally {
@@ -215,15 +189,17 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Decline a relationship request
   const declineRelationshipRequest = async (requestId: string) => {
+    if (!user) return;
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Remove from pending requests
-      const updatedRequests = state.pendingRequests.filter(req => req.id !== requestId);
-      dispatch({ type: 'SET_PENDING_REQUESTS', payload: updatedRequests });
+      const { error } = await supabase
+        .from('relationship_requests')
+        .update({ status: 'declined', updated_at: new Date().toISOString() })
+        .eq('id', requestId);
+      if (error) throw error;
+      fetchPendingRequests();
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to decline request' });
     } finally {
