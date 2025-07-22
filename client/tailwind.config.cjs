@@ -6,8 +6,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        border: 'rgb(229, 231, 235)',
-        background: 'rgb(250, 250, 250)',
+        // Use CSS variables for theme colors
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        border: 'hsl(var(--border, 229, 231, 235))', // fallback for border if not set
       },
     },
   },
