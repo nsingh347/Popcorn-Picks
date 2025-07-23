@@ -13,6 +13,7 @@ import type { Movie } from '@/types/movie';
 import { Link } from 'wouter';
 import { useCouples } from '@/contexts/CouplesContext';
 import { Select } from '@/components/ui/select';
+import { useRef } from 'react';
 
 function MatchPopup({ show, movie, onClose }: { show: boolean; movie: Movie | null; onClose: () => void }) {
   if (!show || !movie) return null;
@@ -40,6 +41,9 @@ export default function Swipe() {
   const [genreId, setGenreId] = useState<number | undefined>();
   const [year, setYear] = useState<number | undefined>();
   const [providerId, setProviderId] = useState<number | undefined>();
+  const [genreSearch, setGenreSearch] = useState('');
+  const [yearSearch, setYearSearch] = useState('');
+  const [providerSearch, setProviderSearch] = useState('');
 
   const { data: genres } = useQuery({
     queryKey: ['genres'],
@@ -49,6 +53,11 @@ export default function Swipe() {
     queryKey: ['providers'],
     queryFn: () => tmdbService.getWatchProvidersList(),
   });
+
+  const allYears = Array.from({ length: 45 }, (_, i) => 2024 - i);
+  const filteredGenres = genres?.genres.filter((g: any) => g.name.toLowerCase().includes(genreSearch.toLowerCase()));
+  const filteredYears = allYears.filter(y => y.toString().includes(yearSearch));
+  const filteredProviders = providers?.filter((p: any) => p.provider_name.toLowerCase().includes(providerSearch.toLowerCase()));
 
   const { data: moviesData, refetch, error, isLoading } = useQuery({
     queryKey: ['swipe-movies', genreId, year, providerId],
@@ -156,13 +165,20 @@ export default function Swipe() {
           {/* Genre Filter */}
           <div className="flex flex-col items-start">
             <label className="text-gray-300 mb-1 font-medium">Genre</label>
+            <input
+              type="text"
+              value={genreSearch}
+              onChange={e => setGenreSearch(e.target.value)}
+              placeholder="Search genres..."
+              className="mb-2 bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-1 w-full min-w-[160px]"
+            />
             <select
               value={genreId?.toString() || ''}
               onChange={e => setGenreId(e.target.value ? Number(e.target.value) : undefined)}
               className="bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 min-w-[160px]"
             >
               <option value="">All Genres</option>
-              {genres?.genres.map((g: any) => (
+              {filteredGenres?.map((g: any) => (
                 <option key={g.id} value={g.id}>{g.name}</option>
               ))}
             </select>
@@ -170,13 +186,20 @@ export default function Swipe() {
           {/* Year Filter */}
           <div className="flex flex-col items-start">
             <label className="text-gray-300 mb-1 font-medium">Release Year</label>
+            <input
+              type="text"
+              value={yearSearch}
+              onChange={e => setYearSearch(e.target.value)}
+              placeholder="Search years..."
+              className="mb-2 bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-1 w-full min-w-[120px]"
+            />
             <select
               value={year?.toString() || ''}
               onChange={e => setYear(e.target.value ? Number(e.target.value) : undefined)}
               className="bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 min-w-[120px]"
             >
               <option value="">All Years</option>
-              {Array.from({ length: 45 }, (_, i) => 2024 - i).map(y => (
+              {filteredYears.map(y => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
@@ -184,13 +207,20 @@ export default function Swipe() {
           {/* Provider Filter */}
           <div className="flex flex-col items-start">
             <label className="text-gray-300 mb-1 font-medium">Platform</label>
+            <input
+              type="text"
+              value={providerSearch}
+              onChange={e => setProviderSearch(e.target.value)}
+              placeholder="Search platforms..."
+              className="mb-2 bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-1 w-full min-w-[180px]"
+            />
             <select
               value={providerId?.toString() || ''}
               onChange={e => setProviderId(e.target.value ? Number(e.target.value) : undefined)}
               className="bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 min-w-[180px]"
             >
               <option value="">All Platforms</option>
-              {providers?.map((p: any) => (
+              {filteredProviders?.map((p: any) => (
                 <option key={p.provider_id} value={p.provider_id}>{p.provider_name}</option>
               ))}
             </select>
