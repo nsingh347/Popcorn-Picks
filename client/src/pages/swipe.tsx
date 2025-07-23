@@ -152,28 +152,49 @@ export default function Swipe() {
     <div className="min-h-screen bg-deep-black pt-20 pb-8">
       <div className="container mx-auto px-6">
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 justify-center mb-8">
+        <div className="flex flex-wrap gap-8 justify-center mb-8">
           {/* Genre Filter */}
-          <Select value={genreId?.toString() || ''} onValueChange={val => setGenreId(val ? Number(val) : undefined)}>
-            <option value="">All Genres</option>
-            {genres?.genres.map((g: any) => (
-              <option key={g.id} value={g.id}>{g.name}</option>
-            ))}
-          </Select>
+          <div className="flex flex-col items-start">
+            <label className="text-gray-300 mb-1 font-medium">Genre</label>
+            <select
+              value={genreId?.toString() || ''}
+              onChange={e => setGenreId(e.target.value ? Number(e.target.value) : undefined)}
+              className="bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 min-w-[160px]"
+            >
+              <option value="">All Genres</option>
+              {genres?.genres.map((g: any) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
           {/* Year Filter */}
-          <Select value={year?.toString() || ''} onValueChange={val => setYear(val ? Number(val) : undefined)}>
-            <option value="">All Years</option>
-            {Array.from({ length: 45 }, (_, i) => 2024 - i).map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </Select>
+          <div className="flex flex-col items-start">
+            <label className="text-gray-300 mb-1 font-medium">Release Year</label>
+            <select
+              value={year?.toString() || ''}
+              onChange={e => setYear(e.target.value ? Number(e.target.value) : undefined)}
+              className="bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 min-w-[120px]"
+            >
+              <option value="">All Years</option>
+              {Array.from({ length: 45 }, (_, i) => 2024 - i).map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
           {/* Provider Filter */}
-          <Select value={providerId?.toString() || ''} onValueChange={val => setProviderId(val ? Number(val) : undefined)}>
-            <option value="">All Platforms</option>
-            {providers?.map((p: any) => (
-              <option key={p.provider_id} value={p.provider_id}>{p.provider_name}</option>
-            ))}
-          </Select>
+          <div className="flex flex-col items-start">
+            <label className="text-gray-300 mb-1 font-medium">Platform</label>
+            <select
+              value={providerId?.toString() || ''}
+              onChange={e => setProviderId(e.target.value ? Number(e.target.value) : undefined)}
+              className="bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 min-w-[180px]"
+            >
+              <option value="">All Platforms</option>
+              {providers?.map((p: any) => (
+                <option key={p.provider_id} value={p.provider_id}>{p.provider_name}</option>
+              ))}
+            </select>
+          </div>
         </div>
         {/* Header */}
         <div className="text-center mb-8">
