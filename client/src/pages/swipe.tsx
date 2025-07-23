@@ -175,8 +175,19 @@ export default function Swipe() {
               styles={{
                 control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white' }),
                 menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
-                singleValue: (base) => ({ ...base, color: 'white' }),
-                option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#333' : '#23272a', color: 'white' }),
+                singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
+                input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
+                placeholder: (base) => ({ ...base, color: '#bbb', fontWeight: 500 }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isSelected
+                    ? '#FFD700'
+                    : state.isFocused
+                    ? '#444'
+                    : '#23272a',
+                  color: state.isSelected ? '#23272a' : '#fff',
+                  fontWeight: state.isSelected ? 700 : 500,
+                }),
               }}
             />
           </div>
@@ -193,8 +204,19 @@ export default function Swipe() {
               styles={{
                 control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white' }),
                 menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
-                singleValue: (base) => ({ ...base, color: 'white' }),
-                option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#333' : '#23272a', color: 'white' }),
+                singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
+                input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
+                placeholder: (base) => ({ ...base, color: '#bbb', fontWeight: 500 }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isSelected
+                    ? '#FFD700'
+                    : state.isFocused
+                    ? '#444'
+                    : '#23272a',
+                  color: state.isSelected ? '#23272a' : '#fff',
+                  fontWeight: state.isSelected ? 700 : 500,
+                }),
               }}
             />
           </div>
@@ -211,8 +233,19 @@ export default function Swipe() {
               styles={{
                 control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white' }),
                 menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
-                singleValue: (base) => ({ ...base, color: 'white' }),
-                option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#333' : '#23272a', color: 'white' }),
+                singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
+                input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
+                placeholder: (base) => ({ ...base, color: '#bbb', fontWeight: 500 }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isSelected
+                    ? '#FFD700'
+                    : state.isFocused
+                    ? '#444'
+                    : '#23272a',
+                  color: state.isSelected ? '#23272a' : '#fff',
+                  fontWeight: state.isSelected ? 700 : 500,
+                }),
               }}
             />
           </div>
