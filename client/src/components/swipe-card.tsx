@@ -160,23 +160,24 @@ export function SwipeCard({ movie, onSwipe, isActive = true, index = 0, swipeCou
       </div>
 
       {/* Swipe action buttons */}
-      <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex space-x-8">
+      <div className="absolute -bottom-24 left-1/2 transform -translate-x-1/2 flex space-x-16 justify-center w-full">
         <Button
-          size="lg"
+          size="icon"
           variant="outline"
-          className="w-16 h-16 rounded-full bg-red-500/20 hover:bg-red-500/40 border-red-400 text-red-400 hover:text-red-300"
+          className="w-20 h-20 rounded-full bg-red-600/90 hover:bg-red-700 border-4 border-white shadow-lg flex items-center justify-center text-white text-4xl transition-all duration-200"
+          style={{ boxShadow: '0 4px 24px 0 rgba(255,0,0,0.25)' }}
           onClick={() => handleButtonSwipe('left')}
         >
-          <X className="w-6 h-6" />
+          <X className="w-10 h-10" />
         </Button>
-        
         <Button
-          size="lg"
+          size="icon"
           variant="outline"
-          className="w-16 h-16 rounded-full bg-green-500/20 hover:bg-green-500/40 border-green-400 text-green-400 hover:text-green-300"
+          className="w-20 h-20 rounded-full bg-green-600/90 hover:bg-green-700 border-4 border-white shadow-lg flex items-center justify-center text-white text-4xl transition-all duration-200"
+          style={{ boxShadow: '0 4px 24px 0 rgba(0,255,0,0.25)' }}
           onClick={() => handleButtonSwipe('right')}
         >
-          <Heart className="w-6 h-6" />
+          <Heart className="w-10 h-10" />
         </Button>
       </div>
     </motion.div>
