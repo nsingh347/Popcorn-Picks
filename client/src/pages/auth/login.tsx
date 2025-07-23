@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'wouter';
 import { Eye, EyeOff, Mail, Lock, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,19 +12,52 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading, error } = useAuth();
   const [, setLocation] = useLocation();
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await login({ email, password });
-  };
-
-  const handleSuccess = () => {
-    setLocation('/swipe');
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+      setLocation('/swipe');
+    }, 1800);
   };
 
   return (
     <div className="min-h-screen bg-deep-black flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            >
+              <motion.div
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 40, opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-sm mx-auto"
+              >
+                <h2 className="text-3xl font-bold text-netflix mb-2">Welcome Back! 🍿</h2>
+                <p className="text-gray-700 mb-4">Login successful. Redirecting to Swipe...</p>
+                <div className="flex justify-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    className="text-5xl"
+                  >
+                    🎉
+                  </motion.div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -138,7 +171,14 @@ export default function Login() {
           {/* Demo Login */}
           <div className="mt-6">
             <Button
-              onClick={() => login({ email: 'demo@example.com', password: 'demo123' })}
+              onClick={async () => {
+                await login({ email: 'demo@example.com', password: 'demo123' });
+                setShowSuccess(true);
+                setTimeout(() => {
+                  setShowSuccess(false);
+                  setLocation('/swipe');
+                }, 1800);
+              }}
               variant="outline"
               className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
             >
