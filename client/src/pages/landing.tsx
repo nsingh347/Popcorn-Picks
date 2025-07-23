@@ -317,11 +317,7 @@ export default function Landing() {
           >
             <div className="mb-12">
               {/* Animated Avatar */}
-              <div className="w-32 h-32 mx-auto mb-8 rounded-full bg-gradient-to-br from-netflix to-accent-gold p-1">
-                <div className="w-full h-full rounded-full bg-deep-black flex items-center justify-center">
-                  <span className="text-4xl font-bold text-white">NS</span>
-                </div>
-              </div>
+              {/* Removed unnecessary 'NS' avatar */}
               
               <h2 className="text-4xl md:text-5xl font-bold mb-6">
                 Meet the <span className="text-netflix">Creator</span>
