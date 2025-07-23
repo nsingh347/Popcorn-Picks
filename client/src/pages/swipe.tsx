@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Movie } from '@/types/movie';
 import { Link } from 'wouter';
 import { useCouples } from '@/contexts/CouplesContext';
-import { Select } from '@/components/ui/select';
+import Select from 'react-select';
 import { useRef } from 'react';
 
 function MatchPopup({ show, movie, onClose }: { show: boolean; movie: Movie | null; onClose: () => void }) {
@@ -55,9 +55,9 @@ export default function Swipe() {
   });
 
   const allYears = Array.from({ length: 45 }, (_, i) => 2024 - i);
-  const filteredGenres = genres?.genres.filter((g: any) => g.name.toLowerCase().includes(genreSearch.toLowerCase()));
-  const filteredYears = allYears.filter(y => y.toString().includes(yearSearch));
-  const filteredProviders = providers?.filter((p: any) => p.provider_name.toLowerCase().includes(providerSearch.toLowerCase()));
+  const genreOptions = genres?.genres.map((g: any) => ({ value: g.id, label: g.name })) || [];
+  const yearOptions = allYears.map(y => ({ value: y, label: y.toString() }));
+  const providerOptions = providers?.map((p: any) => ({ value: p.provider_id, label: p.provider_name })) || [];
 
   const { data: moviesData, refetch, error, isLoading } = useQuery({
     queryKey: ['swipe-movies', genreId, year, providerId],
@@ -163,67 +163,58 @@ export default function Swipe() {
         {/* Filters */}
         <div className="flex flex-wrap gap-8 justify-center mb-8">
           {/* Genre Filter */}
-          <div className="flex flex-col items-start">
+          <div className="flex flex-col items-start min-w-[200px]">
             <label className="text-gray-300 mb-1 font-medium">Genre</label>
-            <input
-              type="text"
-              value={genreSearch}
-              onChange={e => setGenreSearch(e.target.value)}
-              placeholder="Search genres..."
-              className="mb-2 bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-1 w-full min-w-[160px]"
+            <Select
+              options={[{ value: '', label: 'All Genres' }, ...genreOptions]}
+              value={genreOptions.find(o => o.value === genreId) || { value: '', label: 'All Genres' }}
+              onChange={opt => setGenreId(opt?.value ? Number(opt.value) : undefined)}
+              isClearable
+              placeholder="All Genres"
+              classNamePrefix="react-select"
+              styles={{
+                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white' }),
+                menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
+                singleValue: (base) => ({ ...base, color: 'white' }),
+                option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#333' : '#23272a', color: 'white' }),
+              }}
             />
-            <select
-              value={genreId?.toString() || ''}
-              onChange={e => setGenreId(e.target.value ? Number(e.target.value) : undefined)}
-              className="bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 min-w-[160px]"
-            >
-              <option value="">All Genres</option>
-              {filteredGenres?.map((g: any) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
           </div>
           {/* Year Filter */}
-          <div className="flex flex-col items-start">
+          <div className="flex flex-col items-start min-w-[140px]">
             <label className="text-gray-300 mb-1 font-medium">Release Year</label>
-            <input
-              type="text"
-              value={yearSearch}
-              onChange={e => setYearSearch(e.target.value)}
-              placeholder="Search years..."
-              className="mb-2 bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-1 w-full min-w-[120px]"
+            <Select
+              options={[{ value: '', label: 'All Years' }, ...yearOptions]}
+              value={yearOptions.find(o => o.value === year) || { value: '', label: 'All Years' }}
+              onChange={opt => setYear(opt?.value ? Number(opt.value) : undefined)}
+              isClearable
+              placeholder="All Years"
+              classNamePrefix="react-select"
+              styles={{
+                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white' }),
+                menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
+                singleValue: (base) => ({ ...base, color: 'white' }),
+                option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#333' : '#23272a', color: 'white' }),
+              }}
             />
-            <select
-              value={year?.toString() || ''}
-              onChange={e => setYear(e.target.value ? Number(e.target.value) : undefined)}
-              className="bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 min-w-[120px]"
-            >
-              <option value="">All Years</option>
-              {filteredYears.map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
           </div>
           {/* Provider Filter */}
-          <div className="flex flex-col items-start">
+          <div className="flex flex-col items-start min-w-[220px]">
             <label className="text-gray-300 mb-1 font-medium">Platform</label>
-            <input
-              type="text"
-              value={providerSearch}
-              onChange={e => setProviderSearch(e.target.value)}
-              placeholder="Search platforms..."
-              className="mb-2 bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-1 w-full min-w-[180px]"
+            <Select
+              options={[{ value: '', label: 'All Platforms' }, ...providerOptions]}
+              value={providerOptions.find(o => o.value === providerId) || { value: '', label: 'All Platforms' }}
+              onChange={opt => setProviderId(opt?.value ? Number(opt.value) : undefined)}
+              isClearable
+              placeholder="All Platforms"
+              classNamePrefix="react-select"
+              styles={{
+                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white' }),
+                menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
+                singleValue: (base) => ({ ...base, color: 'white' }),
+                option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#333' : '#23272a', color: 'white' }),
+              }}
             />
-            <select
-              value={providerId?.toString() || ''}
-              onChange={e => setProviderId(e.target.value ? Number(e.target.value) : undefined)}
-              className="bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 min-w-[180px]"
-            >
-              <option value="">All Platforms</option>
-              {filteredProviders?.map((p: any) => (
-                <option key={p.provider_id} value={p.provider_id}>{p.provider_name}</option>
-              ))}
-            </select>
           </div>
         </div>
         {/* Header */}
