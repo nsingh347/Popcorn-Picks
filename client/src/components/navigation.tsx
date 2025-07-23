@@ -55,9 +55,13 @@ export function Navigation() {
           {avatar ? (
             <img src={avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover border-2 border-accent-gold" />
           ) : (
-            <span className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-lg text-white">{user?.displayName?.charAt(0) || 'U'}</span>
+            <span className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-lg text-white">
+              {user?.displayName?.charAt(0) || user?.username?.charAt(0) || user?.email?.charAt(0) || 'U'}
+            </span>
           )}
-          <span className="text-gray-300 text-sm">Hi, {user?.displayName}</span>
+          <span className="text-gray-300 text-sm">
+            Hi, {user?.displayName || user?.username || user?.email || 'User'}
+          </span>
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-accent-gold" title="Toggle theme">
             {theme === 'dark' ? <span>🌙</span> : <span>☀️</span>}
           </Button>
