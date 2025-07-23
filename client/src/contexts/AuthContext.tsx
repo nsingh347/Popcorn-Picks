@@ -49,6 +49,18 @@ const initialState: AuthState = {
   error: null,
 };
 
+function mapSupabaseUser(user: any): User {
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.user_metadata?.username || user.raw_user_meta_data?.username || '',
+    displayName: user.user_metadata?.displayName || user.raw_user_meta_data?.displayName || '',
+    avatar: user.user_metadata?.avatar || user.raw_user_meta_data?.avatar || '',
+    createdAt: user.created_at ? new Date(user.created_at) : new Date(),
+    updatedAt: new Date(),
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
@@ -87,9 +99,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       const user = data.user;
       if (!user) throw new Error('No user returned');
+      const mappedUser = mapSupabaseUser(user);
       localStorage.setItem('auth_token', data.session?.access_token || '');
-      localStorage.setItem('user_data', JSON.stringify(user));
-      dispatch({ type: 'SET_USER', payload: user });
+      localStorage.setItem('user_data', JSON.stringify(mappedUser));
+      dispatch({ type: 'SET_USER', payload: mappedUser });
     } catch (error: any) {
       dispatch({ type: 'SET_ERROR', payload: error.message || 'Login failed' });
     } finally {
@@ -115,9 +128,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       const user = signUpData.user;
       if (!user) throw new Error('No user returned');
+      const mappedUser = mapSupabaseUser(user);
       localStorage.setItem('auth_token', signUpData.session?.access_token || '');
-      localStorage.setItem('user_data', JSON.stringify(user));
-      dispatch({ type: 'SET_USER', payload: user });
+      localStorage.setItem('user_data', JSON.stringify(mappedUser));
+      dispatch({ type: 'SET_USER', payload: mappedUser });
     } catch (error: any) {
       dispatch({ type: 'SET_ERROR', payload: error.message || 'Registration failed' });
     } finally {
