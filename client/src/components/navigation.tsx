@@ -27,6 +27,7 @@ export function Navigation() {
 
   const navItems = [
     { href: '/', label: 'Home' },
+    { href: '/discover', label: 'Discover' },
     { href: '/swipe', label: 'Swipe' },
     { href: '/recommendations', label: 'Recommendations' },
     { href: '/watchlist', label: 'Watchlist' },

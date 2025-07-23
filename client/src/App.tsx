@@ -18,6 +18,7 @@ import NotFound from "@/pages/not-found";
 import Personalize from '@/pages/personalize';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Redirect } from 'wouter';
+import Discover from './pages/discover';
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType<any> }) {
   const { isAuthenticated } = useAuth();
@@ -31,6 +32,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/discover" component={Discover} />
       <Route path="/swipe" component={() => <ProtectedRoute component={Swipe} />} />
       <Route path="/recommendations" component={() => <ProtectedRoute component={Recommendations} />} />
       <Route path="/watchlist" component={() => <ProtectedRoute component={Watchlist} />} />

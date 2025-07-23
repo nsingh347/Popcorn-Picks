@@ -20,7 +20,7 @@ export default function Login() {
     setShowSuccess(true);
     setTimeout(() => {
       setShowSuccess(false);
-      setLocation('/swipe');
+      setLocation('/discover');
     }, 1800);
   };
 
@@ -176,7 +176,7 @@ export default function Login() {
                 setShowSuccess(true);
                 setTimeout(() => {
                   setShowSuccess(false);
-                  setLocation('/swipe');
+                  setLocation('/discover');
                 }, 1800);
               }}
               variant="outline"
