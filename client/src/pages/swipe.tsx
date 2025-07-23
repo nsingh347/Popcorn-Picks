@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Movie } from '@/types/movie';
 import { Link } from 'wouter';
 import { useCouples } from '@/contexts/CouplesContext';
+import { Select } from '@/components/ui/select';
 
 function MatchPopup({ show, movie, onClose }: { show: boolean; movie: Movie | null; onClose: () => void }) {
   if (!show || !movie) return null;
@@ -36,10 +37,22 @@ export default function Swipe() {
   const { currentRelationship, couplePreferences, addMatchedMovie } = useCouples();
   const [showMatch, setShowMatch] = useState(false);
   const [matchedMovie, setMatchedMovie] = useState<Movie | null>(null);
+  const [genreId, setGenreId] = useState<number | undefined>();
+  const [year, setYear] = useState<number | undefined>();
+  const [providerId, setProviderId] = useState<number | undefined>();
+
+  const { data: genres } = useQuery({
+    queryKey: ['genres'],
+    queryFn: () => tmdbService.getGenres(),
+  });
+  const { data: providers } = useQuery({
+    queryKey: ['providers'],
+    queryFn: () => tmdbService.getWatchProvidersList(),
+  });
 
   const { data: moviesData, refetch, error, isLoading } = useQuery({
-    queryKey: ['swipe-movies'],
-    queryFn: () => tmdbService.getMoviesForSwipe(),
+    queryKey: ['swipe-movies', genreId, year, providerId],
+    queryFn: () => tmdbService.getMoviesForSwipe(1, { genreId, year, providerId }),
   });
 
   useEffect(() => {
@@ -138,6 +151,30 @@ export default function Swipe() {
   return (
     <div className="min-h-screen bg-deep-black pt-20 pb-8">
       <div className="container mx-auto px-6">
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 justify-center mb-8">
+          {/* Genre Filter */}
+          <Select value={genreId?.toString() || ''} onValueChange={val => setGenreId(val ? Number(val) : undefined)}>
+            <option value="">All Genres</option>
+            {genres?.genres.map((g: any) => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </Select>
+          {/* Year Filter */}
+          <Select value={year?.toString() || ''} onValueChange={val => setYear(val ? Number(val) : undefined)}>
+            <option value="">All Years</option>
+            {Array.from({ length: 45 }, (_, i) => 2024 - i).map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </Select>
+          {/* Provider Filter */}
+          <Select value={providerId?.toString() || ''} onValueChange={val => setProviderId(val ? Number(val) : undefined)}>
+            <option value="">All Platforms</option>
+            {providers?.map((p: any) => (
+              <option key={p.provider_id} value={p.provider_id}>{p.provider_name}</option>
+            ))}
+          </Select>
+        </div>
         {/* Header */}
         <div className="text-center mb-8">
           <motion.h1

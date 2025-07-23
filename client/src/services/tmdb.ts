@@ -73,6 +73,12 @@ class TMDBService {
     return this.fetchFromTMDB('/genre/movie/list');
   }
 
+  async getWatchProvidersList(): Promise<any[]> {
+    // Returns a list of streaming providers (e.g., Netflix, Prime, etc.)
+    const data = await this.fetchFromTMDB('/watch/providers/movie?watch_region=US');
+    return data.results || [];
+  }
+
   async getBollywoodMovies(page: number = 1): Promise<TMDBResponse> {
     // Filter for Hindi language movies (Bollywood)
     return this.fetchFromTMDB(`/discover/movie?with_original_language=hi&page=${page}&sort_by=popularity.desc`);
@@ -96,41 +102,16 @@ class TMDBService {
     return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
   }
 
-  async getMoviesForSwipe(page: number = 1): Promise<Movie[]> {
+  async getMoviesForSwipe(page: number = 1, filters: { genreId?: number, year?: number, providerId?: number } = {}): Promise<Movie[]> {
     try {
-      // Generate random pages for more variety
-      const randomPage1 = Math.floor(Math.random() * 5) + 1;
-      const randomPage2 = Math.floor(Math.random() * 5) + 1;
-      const randomPage3 = Math.floor(Math.random() * 5) + 1;
-      const randomPage4 = Math.floor(Math.random() * 5) + 1;
-      const randomPage5 = Math.floor(Math.random() * 5) + 1;
-
-      // Diverse language codes for global movies
-      const languages = ['en', 'hi', 'es', 'fr', 'ja', 'ko', 'de', 'it', 'zh', 'ru', 'pt', 'tr', 'ar'];
-      const randomLang1 = languages[Math.floor(Math.random() * languages.length)];
-      const randomLang2 = languages[Math.floor(Math.random() * languages.length)];
-
-      // Get a mix of different movie sources for more global variety
-      const [popularMovies, topRatedMovies, lang1Movies, lang2Movies] = await Promise.all([
-        this.getPopularMovies(randomPage1),
-        this.getTopRatedMovies(randomPage2),
-        this.fetchFromTMDB(`/discover/movie?with_original_language=${randomLang1}&page=${randomPage3}&sort_by=popularity.desc`),
-        this.fetchFromTMDB(`/discover/movie?with_original_language=${randomLang2}&page=${randomPage4}&sort_by=popularity.desc`)
-      ]);
-
-      // Combine movies from different sources
-      const allMovies = [
-        ...popularMovies.results.slice(0, 8),
-        ...topRatedMovies.results.slice(0, 8),
-        ...(lang1Movies.results?.slice(0, 8) || []),
-        ...(lang2Movies.results?.slice(0, 8) || [])
-      ];
-
-      // Shuffle array for randomness
-      return allMovies.sort(() => Math.random() - 0.5);
+      let endpoint = `/discover/movie?page=${page}&sort_by=popularity.desc`;
+      if (filters.genreId) endpoint += `&with_genres=${filters.genreId}`;
+      if (filters.year) endpoint += `&primary_release_year=${filters.year}`;
+      if (filters.providerId) endpoint += `&with_watch_providers=${filters.providerId}&watch_region=US`;
+      const data = await this.fetchFromTMDB(endpoint);
+      return data.results || [];
     } catch (error) {
       console.error('Error fetching movies for swipe:', error);
-      // Return empty array on error
       return [];
     }
   }
