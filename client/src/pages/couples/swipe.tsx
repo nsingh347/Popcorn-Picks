@@ -77,15 +77,26 @@ export default function CouplesSwipe() {
   const yearOptions = allYears.map(y => ({ value: y, label: y.toString() }));
   const providerOptions = providers?.map((p: any) => ({ value: p.provider_id, label: p.provider_name })) || [];
 
-  // Fetch movies for the couple (shared set)
-  useEffect(() => {
-    setIsLoading(true);
-    tmdbService.getMoviesForSwipe(1, filters).then((data: Movie[]) => {
-      setMovies(data);
-      setCurrentIndex(0);
-      setIsLoading(false);
-    });
-  }, [filters]);
+  // Fetch matched movies for the couple (hook moved to top)
+  const { data: matchedMovies = [], refetch: refetchMatchedMovies } = useMatchedMovies(coupleId);
+
+  // Debug: log matchedMovies and movies
+  console.log('Matched movies:', matchedMovies);
+  console.log('All movies:', movies);
+
+  // Remove matched movies from the swipe stack
+  const filteredMovies = movies.filter(
+    (movie) => {
+      const isMatched = matchedMovies.some((m) => {
+        const match = m.id === movie.id;
+        if (match) console.log('Filtering out matched movie:', movie.id, movie.title);
+        return match;
+      });
+      return !isMatched;
+    }
+  );
+  const currentMovie = filteredMovies[currentIndex];
+  const upcomingMovies = filteredMovies.slice(currentIndex + 1, currentIndex + 4);
 
   // Handle swipe
   const handleSwipe = async (direction: 'left' | 'right', movie: Movie) => {
@@ -108,18 +119,19 @@ export default function CouplesSwipe() {
       .eq('liked', true);
     if (swipes && swipes.length === 2) {
       // Insert into matched_movies table (idempotent)
-      await supabase.from('matched_movies').upsert({
+      const { error: matchError } = await supabase.from('matched_movies').upsert({
         couple_id: coupleId,
         movie_id: movie.id,
       });
+      if (matchError) console.error('Matched movie upsert error:', matchError);
       setMatch(movie);
       setShowMatch(true);
-      // Do NOT return here; allow swiping to continue
+      refetchMatchedMovies(); // Ensure matched movies are refreshed
     }
     setCurrentIndex(idx => idx + 1);
     setSwiping(false);
     // Load more movies if running low
-    if (currentIndex >= movies.length - 3) {
+    if (currentIndex >= filteredMovies.length - 3) {
       setIsLoadingMore(true);
       const moreMovies = await tmdbService.getMoviesForSwipe(Math.floor(Math.random() * 5) + 1, filters);
       setMovies(prev => [...prev, ...moreMovies]);
@@ -167,11 +179,7 @@ export default function CouplesSwipe() {
   );
 
   // Progress bar
-  const progress = Math.round(((currentIndex + 1) / movies.length) * 100);
-
-  // Current and upcoming movies
-  const currentMovie = movies[currentIndex];
-  const upcomingMovies = movies.slice(currentIndex + 1, currentIndex + 4);
+  const progress = Math.round(((currentIndex + 1) / filteredMovies.length) * 100);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-500/10 to-indigo-500/10 pt-20 pb-8">
@@ -191,7 +199,7 @@ export default function CouplesSwipe() {
         <div className="max-w-md mx-auto relative">
           <div className="relative h-96 mb-20">
             <AnimatePresence>
-              {currentMovie && !match && (
+              {currentMovie && (
                 <SwipeCard
                   key={currentMovie.id}
                   movie={currentMovie}
@@ -199,7 +207,7 @@ export default function CouplesSwipe() {
                   isActive={!swiping}
                 />
               )}
-              {!match && upcomingMovies.map((movie, index) => (
+              {upcomingMovies.map((movie, index) => (
                 <SwipeCard
                   key={movie.id}
                   movie={movie}
@@ -213,7 +221,7 @@ export default function CouplesSwipe() {
           <div className="text-center mb-8">
             <p className="text-gray-400 mb-2">Swipe or use the buttons below</p>
             <div className="flex justify-center space-x-2">
-              {Array.from({ length: Math.min(movies.length - currentIndex, 3) }).map((_, i) => (
+              {Array.from({ length: Math.min(filteredMovies.length - currentIndex, 3) }).map((_, i) => (
                 <div
                   key={i}
                   className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-pink-500' : 'bg-gray-600'}`}
@@ -225,7 +233,7 @@ export default function CouplesSwipe() {
         <div className="max-w-md mx-auto mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-gray-400">Progress</span>
-            <span className="text-sm text-pink-500">{currentIndex + 1}/{movies.length} movies</span>
+            <span className="text-sm text-pink-500">{currentIndex + 1}/{filteredMovies.length} movies</span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
             <div
@@ -240,7 +248,7 @@ export default function CouplesSwipe() {
         {isLoadingMore && (
           <div className="text-center text-pink-500 py-4">Loading more movies...</div>
         )}
-        {currentIndex >= movies.length && !match && !isLoading && (
+        {currentIndex >= filteredMovies.length && !match && !isLoading && (
           <div className="text-center">
             <div className="text-6xl mb-4">🎬</div>
             <h3 className="text-2xl font-bold mb-4">That's all for now!</h3>
@@ -252,7 +260,11 @@ export default function CouplesSwipe() {
             </Button>
           </div>
         )}
-        <MatchModal show={showMatch} movie={match} onClose={() => setShowMatch(false)} />
+        <MatchModal show={showMatch} movie={match} onClose={() => {
+          setShowMatch(false);
+          setMatch(null);
+          refetchMatchedMovies();
+        }} />
       </div>
     </div>
   );
