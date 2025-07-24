@@ -453,7 +453,7 @@ export default function Couples() {
               transition={{ duration: 0.6, delay: 0.25 }}
             >
               <h2 className="text-2xl font-bold text-pink-500 mb-6 text-center">Date Night Matches</h2>
-              {isLoadingMatched ? (
+              {loadingMatched ? (
                 <div className="text-center text-white py-8">Loading matched movies...</div>
               ) : matchedMovies && matchedMovies.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
