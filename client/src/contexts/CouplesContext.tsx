@@ -151,7 +151,7 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
       // Find partner by email
       const { data: users, error: userError } = await supabase
         .from('users')
-        .select('id')
+        .select('id, email, username, display_name, avatar_url, created_at')
         .eq('email', partnerEmail)
         .single();
       if (userError || !users) throw new Error('Partner not found');
