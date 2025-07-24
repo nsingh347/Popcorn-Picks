@@ -62,6 +62,8 @@ export default function CouplesSwipe() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [swiping, setSwiping] = useState(false);
   const [swipeHistory, setSwipeHistory] = useState<{ [movieId: number]: 'like' | 'dislike' }>({});
+  // Add error state
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Filters
   const { data: genres } = useQuery({
@@ -139,6 +141,24 @@ export default function CouplesSwipe() {
     }
   };
 
+  // Fetch movies for the couple (shared set)
+  useEffect(() => {
+    setIsLoading(true);
+    setFetchError(null);
+    tmdbService.getMoviesForSwipe(1, filters)
+      .then((data: Movie[]) => {
+        setMovies(data);
+        setCurrentIndex(0);
+        setIsLoading(false);
+        if (!data.length) setFetchError('No movies found. Please check your filters or try again later.');
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        setFetchError('Failed to load movies. Please try again later.');
+        console.error('TMDB Swipe Fetch Error:', err);
+      });
+  }, [filters]);
+
   // Filter bar
   const FilterBar = (
     <div className="flex flex-wrap gap-6 justify-center mb-8">
@@ -198,25 +218,30 @@ export default function CouplesSwipe() {
         {FilterBar}
         <div className="max-w-md mx-auto relative">
           <div className="relative h-96 mb-20">
-            <AnimatePresence>
-              {currentMovie && (
-                <SwipeCard
-                  key={currentMovie.id}
-                  movie={currentMovie}
-                  onSwipe={handleSwipe}
-                  isActive={!swiping}
-                />
-              )}
-              {upcomingMovies.map((movie, index) => (
-                <SwipeCard
-                  key={movie.id}
-                  movie={movie}
-                  onSwipe={handleSwipe}
-                  isActive={false}
-                  index={index + 1}
-                />
-              ))}
-            </AnimatePresence>
+            {fetchError && !isLoading && (
+              <div className="text-center text-red-400 py-8">{fetchError}</div>
+            )}
+            {!fetchError && (
+              <AnimatePresence>
+                {currentMovie && (
+                  <SwipeCard
+                    key={currentMovie.id}
+                    movie={currentMovie}
+                    onSwipe={handleSwipe}
+                    isActive={!swiping}
+                  />
+                )}
+                {upcomingMovies.map((movie, index) => (
+                  <SwipeCard
+                    key={movie.id}
+                    movie={movie}
+                    onSwipe={handleSwipe}
+                    isActive={false}
+                    index={index + 1}
+                  />
+                ))}
+              </AnimatePresence>
+            )}
           </div>
           <div className="text-center mb-8">
             <p className="text-gray-400 mb-2">Swipe or use the buttons below</p>
