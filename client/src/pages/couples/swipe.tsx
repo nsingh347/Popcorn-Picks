@@ -253,26 +253,7 @@ export default function CouplesSwipe() {
               ))}
             </div>
           </div>
-          {/* Like/Dislike Buttons */}
-          {currentMovie && (
-            <div className="flex justify-center gap-8 mt-4">
-              <Button
-                variant="outline"
-                className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                onClick={() => handleSwipe('left', currentMovie)}
-                disabled={swiping}
-              >
-                Dislike
-              </Button>
-              <Button
-                className="bg-green-500 hover:bg-green-600 text-white"
-                onClick={() => handleSwipe('right', currentMovie)}
-                disabled={swiping}
-              >
-                Like
-              </Button>
-            </div>
-          )}
+          {/* Like/Dislike Buttons removed for better UX; use SwipeCard's built-in buttons */}
         </div>
         <div className="max-w-md mx-auto mb-8">
           <div className="flex justify-between items-center mb-2">
