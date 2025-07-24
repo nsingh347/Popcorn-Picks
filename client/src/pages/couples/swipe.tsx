@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import Select from 'react-select';
 import type { Movie } from '@/types/movie';
 import { supabase } from '@/lib/supabaseClient';
+import { useQuery as useSupabaseQuery } from '@tanstack/react-query';
 
 function MatchModal({ show, movie, onClose }: { show: boolean; movie: Movie | null; onClose: () => void }) {
   if (!show || !movie) return null;
@@ -28,6 +29,24 @@ function MatchModal({ show, movie, onClose }: { show: boolean; movie: Movie | nu
       </motion.div>
     </div>
   );
+}
+
+function useMatchedMovies(coupleId: string | undefined) {
+  return useSupabaseQuery({
+    queryKey: ['matched-movies', coupleId],
+    queryFn: async () => {
+      if (!coupleId) return [];
+      const { data, error } = await supabase
+        .from('matched_movies')
+        .select('movie_id')
+        .eq('couple_id', coupleId);
+      if (error) return [];
+      const movieIds = data.map((m: any) => m.movie_id);
+      // Fetch movie details from TMDB
+      return Promise.all(movieIds.map((id: number) => tmdbService.getMovieDetails(id)));
+    },
+    enabled: !!coupleId,
+  });
 }
 
 export default function CouplesSwipe() {
@@ -88,10 +107,14 @@ export default function CouplesSwipe() {
       .eq('movie_id', movie.id)
       .eq('liked', true);
     if (swipes && swipes.length === 2) {
+      // Insert into matched_movies table (idempotent)
+      await supabase.from('matched_movies').upsert({
+        couple_id: coupleId,
+        movie_id: movie.id,
+      });
       setMatch(movie);
       setShowMatch(true);
-      setSwiping(false);
-      return;
+      // Do NOT return here; allow swiping to continue
     }
     setCurrentIndex(idx => idx + 1);
     setSwiping(false);
