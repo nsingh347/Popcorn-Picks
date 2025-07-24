@@ -11,8 +11,28 @@ import { useQuery } from '@tanstack/react-query';
 import { tmdbService } from '@/services/tmdb';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { useQuery as useSupabaseQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import CouplesSwipe from './couples/swipe';
+import { MovieCard } from '@/components/movie-card';
+
+function useMatchedMovies(coupleId: string | undefined) {
+  return useSupabaseQuery({
+    queryKey: ['matched-movies', coupleId],
+    queryFn: async () => {
+      if (!coupleId) return [];
+      const { data, error } = await supabase
+        .from('matched_movies')
+        .select('movie_id')
+        .eq('couple_id', coupleId);
+      if (error) return [];
+      const movieIds = data.map((m: any) => m.movie_id);
+      // Fetch movie details from TMDB
+      return Promise.all(movieIds.map((id: number) => tmdbService.getMovieDetails(id)));
+    },
+    enabled: !!coupleId,
+  });
+}
 
 function ConfettiPopup({ show, onClose }: { show: boolean; onClose: () => void }) {
   if (!show) return null;
@@ -155,8 +175,23 @@ export default function Couples() {
             </TabsContent>
           )}
           <TabsContent value="matched">
-            {/* TODO: Show matched movies for the couple */}
-            <div className="text-center text-white">Matched movies will appear here when both of you swipe right on the same movie!</div>
+            {/* Show matched movies for the couple */}
+            {currentRelationship ? (
+              (() => {
+                const { data: matchedMovies = [], isLoading: loadingMatched } = useMatchedMovies(currentRelationship.id);
+                if (loadingMatched) return <div className="text-center text-white">Loading matched movies...</div>;
+                if (!matchedMovies.length) return <div className="text-center text-white">No matched movies yet. Swipe right together to match!</div>;
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {matchedMovies.map((movie: any) => (
+                      <MovieCard key={movie.id} movie={movie} />
+                    ))}
+                  </div>
+                );
+              })()
+            ) : (
+              <div className="text-center text-white">Matched movies will appear here when both of you swipe right on the same movie!</div>
+            )}
           </TabsContent>
           <TabsContent value="recommendations">
             {/* TODO: Show couple recommendations */}
