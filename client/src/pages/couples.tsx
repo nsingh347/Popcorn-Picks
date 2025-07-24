@@ -88,13 +88,8 @@ export default function Couples() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [senderUsernames, setSenderUsernames] = useState<{ [id: string]: string }>({});
 
-  // Fetch matched movies (date night)
-  const matchedMovieIds = couplePreferences?.sharedMovies || [];
-  const { data: matchedMovies, isLoading: isLoadingMatched } = useQuery({
-    queryKey: ['matched-movies', matchedMovieIds],
-    queryFn: async () => Promise.all(matchedMovieIds.map((id: number) => tmdbService.getMovieDetails(id))),
-    enabled: matchedMovieIds.length > 0,
-  });
+  // Fetch matched movies for the couple (hook at top level)
+  const { data: matchedMovies = [], isLoading: loadingMatched } = useMatchedMovies(currentRelationship?.id);
 
   // Fetch usernames for all sender_ids in pendingRequests
   useEffect(() => {
@@ -177,18 +172,17 @@ export default function Couples() {
           <TabsContent value="matched">
             {/* Show matched movies for the couple */}
             {currentRelationship ? (
-              (() => {
-                const { data: matchedMovies = [], isLoading: loadingMatched } = useMatchedMovies(currentRelationship.id);
-                if (loadingMatched) return <div className="text-center text-white">Loading matched movies...</div>;
-                if (!matchedMovies.length) return <div className="text-center text-white">No matched movies yet. Swipe right together to match!</div>;
-                return (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {matchedMovies.map((movie: any) => (
-                      <MovieCard key={movie.id} movie={movie} />
-                    ))}
-                  </div>
-                );
-              })()
+              loadingMatched ? (
+                <div className="text-center text-white">Loading matched movies...</div>
+              ) : !matchedMovies.length ? (
+                <div className="text-center text-white">No matched movies yet. Swipe right together to match!</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {matchedMovies.map((movie: any) => (
+                    <MovieCard key={movie.id} movie={movie} />
+                  ))}
+                </div>
+              )
             ) : (
               <div className="text-center text-white">Matched movies will appear here when both of you swipe right on the same movie!</div>
             )}
