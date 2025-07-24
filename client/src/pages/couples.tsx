@@ -25,10 +25,13 @@ function useMatchedMovies(coupleId: string | undefined) {
         .from('matched_movies')
         .select('movie_id')
         .eq('couple_id', coupleId);
+      console.log('Matched movies from DB:', data, error);
       if (error) return [];
       const movieIds = data.map((m: any) => m.movie_id);
-      // Fetch movie details from TMDB
-      return Promise.all(movieIds.map((id: number) => tmdbService.getMovieDetails(id)));
+      console.log('Fetching details for movie IDs:', movieIds);
+      const details = await Promise.all(movieIds.map((id: number) => tmdbService.getMovieDetails(id)));
+      console.log('Fetched movie details:', details);
+      return details;
     },
     enabled: !!coupleId,
   });
@@ -177,11 +180,14 @@ export default function Couples() {
               ) : !matchedMovies.length ? (
                 <div className="text-center text-white">No matched movies yet. Swipe right together to match!</div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {matchedMovies.map((movie: any) => (
-                    <MovieCard key={movie.id} movie={movie} />
-                  ))}
-                </div>
+                <>
+                  <div className="text-center text-gray-400 mb-2">Debug: {JSON.stringify(matchedMovies.map(m => m.id))}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {matchedMovies.map((movie: any) => (
+                      <MovieCard key={movie.id} movie={movie} />
+                    ))}
+                  </div>
+                </>
               )
             ) : (
               <div className="text-center text-white">Matched movies will appear here when both of you swipe right on the same movie!</div>
