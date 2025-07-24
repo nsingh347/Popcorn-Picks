@@ -73,26 +73,14 @@ function ConfettiPopup({ show, onClose }: { show: boolean; onClose: () => void }
 
 export default function Couples() {
   const { user, logout } = useAuth();
-  const { 
-    currentRelationship, 
-    partner, 
-    couplePreferences, 
-    pendingRequests,
-    sendRelationshipRequest,
-    acceptRelationshipRequest,
-    declineRelationshipRequest,
-    endRelationship,
-    isLoading,
-    error,
-    removeMatchedMovie
-  } = useCouples();
+  const { currentRelationship, partner, couplePreferences, pendingRequests, sendRelationshipRequest, acceptRelationshipRequest, declineRelationshipRequest, endRelationship, coupleId } = useCouples();
 
   const [partnerEmail, setPartnerEmail] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
   const [senderUsernames, setSenderUsernames] = useState<{ [id: string]: string }>({});
 
   // Fetch matched movies for the couple (hook at top level)
-  const { data: matchedMovies = [], isLoading: loadingMatched } = useMatchedMovies(currentRelationship?.id);
+  const { data: matchedMovies = [], isLoading: loadingMatched } = useMatchedMovies(coupleId);
 
   // Fetch usernames for all sender_ids in pendingRequests
   useEffect(() => {

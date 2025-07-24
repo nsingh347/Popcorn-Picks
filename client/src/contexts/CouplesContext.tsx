@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import type { User, Relationship, CouplePreferences } from '@/types/user';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/lib/supabaseClient';
@@ -88,6 +88,7 @@ const initialState: CouplesState = {
 export function CouplesProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(couplesReducer, initialState);
   const { user } = useAuth();
+  const [coupleId, setCoupleId] = useState<string | undefined>(undefined);
 
   // Load couple data on mount
   useEffect(() => {
@@ -96,6 +97,26 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
       fetchPendingRequests();
     }
   }, [user]);
+
+  // Fetch coupleId from couples table for the current user and their partner
+  useEffect(() => {
+    const fetchCoupleId = async () => {
+      if (!user || !state.partner) {
+        setCoupleId(undefined);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('couples')
+        .select('id')
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .or(`user1_id.eq.${state.partner.id},user2_id.eq.${state.partner.id}`)
+        .eq('status', 'accepted')
+        .maybeSingle();
+      if (data && data.id) setCoupleId(data.id);
+      else setCoupleId(undefined);
+    };
+    fetchCoupleId();
+  }, [user, state.partner]);
 
   // Fetch pending relationship requests for the current user
   const fetchPendingRequests = async () => {
@@ -320,7 +341,7 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_COUPLE_PREFERENCES', payload: updatedPreferences });
   };
 
-  const value: CouplesContextType = {
+  const value: CouplesContextType & { coupleId?: string } = {
     ...state,
     sendRelationshipRequest,
     acceptRelationshipRequest,
@@ -330,6 +351,7 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
     addToJointWatchlist,
     removeFromJointWatchlist,
     addMatchedMovie,
+    coupleId,
   };
 
   return (
