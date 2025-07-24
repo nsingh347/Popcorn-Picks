@@ -11,6 +11,8 @@ import { useQuery } from '@tanstack/react-query';
 import { tmdbService } from '@/services/tmdb';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import CouplesSwipe from './couples/swipe';
 
 function ConfettiPopup({ show, onClose }: { show: boolean; onClose: () => void }) {
   if (!show) return null;
@@ -138,6 +140,31 @@ export default function Couples() {
             create joint watchlists, and get personalized recommendations as a couple.
           </p>
         </div>
+
+        {/* Tabs for Couple Features */}
+        <Tabs defaultValue="swipe" className="mb-12">
+          <TabsList className="flex justify-center mb-8">
+            <TabsTrigger value="swipe">Swipe Together</TabsTrigger>
+            <TabsTrigger value="matched">Matched For You</TabsTrigger>
+            <TabsTrigger value="recommendations">Couple Recommendations</TabsTrigger>
+            <TabsTrigger value="watchlist">Joint Watchlist</TabsTrigger>
+          </TabsList>
+          <TabsContent value="swipe">
+            <CouplesSwipe />
+          </TabsContent>
+          <TabsContent value="matched">
+            {/* TODO: Show matched movies for the couple */}
+            <div className="text-center text-white">Matched movies will appear here when both of you swipe right on the same movie!</div>
+          </TabsContent>
+          <TabsContent value="recommendations">
+            {/* TODO: Show couple recommendations */}
+            <div className="text-center text-white">Personalized movie recommendations for you and your partner.</div>
+          </TabsContent>
+          <TabsContent value="watchlist">
+            {/* TODO: Show joint watchlist */}
+            <div className="text-center text-white">Your shared watchlist will appear here.</div>
+          </TabsContent>
+        </Tabs>
 
         {/* User Info */}
         <motion.div
