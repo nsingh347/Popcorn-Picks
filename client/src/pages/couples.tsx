@@ -142,16 +142,18 @@ export default function Couples() {
         </div>
 
         {/* Tabs for Couple Features */}
-        <Tabs defaultValue="swipe" className="mb-12">
+        <Tabs defaultValue={currentRelationship ? "swipe" : "matched"} className="mb-12">
           <TabsList className="flex justify-center mb-8">
-            <TabsTrigger value="swipe">Swipe Together</TabsTrigger>
+            {currentRelationship && <TabsTrigger value="swipe">Swipe Together</TabsTrigger>}
             <TabsTrigger value="matched">Matched For You</TabsTrigger>
             <TabsTrigger value="recommendations">Couple Recommendations</TabsTrigger>
             <TabsTrigger value="watchlist">Joint Watchlist</TabsTrigger>
           </TabsList>
-          <TabsContent value="swipe">
-            <CouplesSwipe />
-          </TabsContent>
+          {currentRelationship && (
+            <TabsContent value="swipe">
+              <CouplesSwipe />
+            </TabsContent>
+          )}
           <TabsContent value="matched">
             {/* TODO: Show matched movies for the couple */}
             <div className="text-center text-white">Matched movies will appear here when both of you swipe right on the same movie!</div>

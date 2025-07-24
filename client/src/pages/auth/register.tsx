@@ -5,189 +5,7 @@ import { Eye, EyeOff, Mail, Lock, User, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
-import { tmdbService } from '@/services/tmdb';
 import { supabase } from '@/lib/supabaseClient';
-
-function OnboardingForm({ onComplete }: { onComplete: () => void }) {
-  const [actors, setActors] = useState<any[]>([]);
-  const [directors, setDirectors] = useState<any[]>([]);
-  const [genres, setGenres] = useState<any[]>([]);
-  const [selectedActors, setSelectedActors] = useState<any[]>([]);
-  const [selectedDirectors, setSelectedDirectors] = useState<any[]>([]);
-  const [selectedGenres, setSelectedGenres] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [actorSearch, setActorSearch] = useState('');
-  const [directorSearch, setDirectorSearch] = useState('');
-  const [actorSearchResults, setActorSearchResults] = useState<any[]>([]);
-  const [directorSearchResults, setDirectorSearchResults] = useState<any[]>([]);
-
-  useEffect(() => {
-    async function fetchOptions() {
-      setLoading(true);
-      const [actors, directors, genres] = await Promise.all([
-        tmdbService.getPopularActors(),
-        tmdbService.getPopularDirectors(),
-        tmdbService.getGenres().then(g => g.genres)
-      ]);
-      setActors(actors);
-      setDirectors(directors);
-      setGenres(genres);
-      setLoading(false);
-    }
-    fetchOptions();
-  }, []);
-
-  // Actor search
-  useEffect(() => {
-    if (actorSearch.length < 2) {
-      setActorSearchResults([]);
-      return;
-    }
-    const timeout = setTimeout(async () => {
-      const results = await tmdbService.searchPeople(actorSearch);
-      setActorSearchResults(results.filter(p => p.known_for_department === 'Acting'));
-    }, 400);
-    return () => clearTimeout(timeout);
-  }, [actorSearch]);
-
-  // Director search
-  useEffect(() => {
-    if (directorSearch.length < 2) {
-      setDirectorSearchResults([]);
-      return;
-    }
-    const timeout = setTimeout(async () => {
-      const results = await tmdbService.searchPeople(directorSearch);
-      setDirectorSearchResults(results.filter(p => p.known_for_department === 'Directing'));
-    }, 400);
-    return () => clearTimeout(timeout);
-  }, [directorSearch]);
-
-  const toggle = (arr: any[], setArr: any, item: any, max: number) => {
-    if (arr.some((a) => a.id === item.id)) {
-      setArr(arr.filter((a) => a.id !== item.id));
-    } else if (arr.length < max) {
-      setArr([...arr, item]);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Save to localStorage for now
-    localStorage.setItem('onboarding_preferences', JSON.stringify({
-      actors: selectedActors,
-      directors: selectedDirectors,
-      genres: selectedGenres
-    }));
-    onComplete();
-  };
-
-  if (loading) return <div className="text-center text-white py-12">Loading preferences...</div>;
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-8 bg-dark-char rounded-2xl p-8 shadow-2xl border border-gray-800 mt-8">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">Personalize Your Experience</h2>
-      {/* Actors */}
-      <div>
-        <label className="block text-lg font-semibold text-gray-300 mb-2">Favorite Actors (Pick 3)</label>
-        <Input
-          type="text"
-          placeholder="Search for an actor..."
-          value={actorSearch}
-          onChange={e => setActorSearch(e.target.value)}
-          className="mb-2 bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-        />
-        <div className="flex flex-wrap gap-2 mb-2">
-          {actorSearchResults.length > 0
-            ? actorSearchResults.map(actor => (
-                <button
-                  type="button"
-                  key={actor.id}
-                  className={`px-3 py-1 rounded-full border text-sm flex items-center ${selectedActors.some(a => a.id === actor.id) ? 'bg-accent-gold text-black border-accent-gold' : 'bg-gray-800 text-white border-gray-700'}`}
-                  onClick={() => toggle(selectedActors, setSelectedActors, actor, 3)}
-                  disabled={!selectedActors.some(a => a.id === actor.id) && selectedActors.length >= 3}
-                >
-                  {actor.profile_path && <img src={`https://image.tmdb.org/t/p/w45${actor.profile_path}`} alt={actor.name} className="w-6 h-6 rounded-full mr-2" />}
-                  {actor.name}
-                </button>
-              ))
-            : actors.map(actor => (
-                <button
-                  type="button"
-                  key={actor.id}
-                  className={`px-3 py-1 rounded-full border text-sm flex items-center ${selectedActors.some(a => a.id === actor.id) ? 'bg-accent-gold text-black border-accent-gold' : 'bg-gray-800 text-white border-gray-700'}`}
-                  onClick={() => toggle(selectedActors, setSelectedActors, actor, 3)}
-                  disabled={!selectedActors.some(a => a.id === actor.id) && selectedActors.length >= 3}
-                >
-                  {actor.profile_path && <img src={`https://image.tmdb.org/t/p/w45${actor.profile_path}`} alt={actor.name} className="w-6 h-6 rounded-full mr-2" />}
-                  {actor.name}
-                </button>
-              ))}
-        </div>
-      </div>
-      {/* Directors */}
-      <div>
-        <label className="block text-lg font-semibold text-gray-300 mb-2">Favorite Directors (Pick 3)</label>
-        <Input
-          type="text"
-          placeholder="Search for a director..."
-          value={directorSearch}
-          onChange={e => setDirectorSearch(e.target.value)}
-          className="mb-2 bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-        />
-        <div className="flex flex-wrap gap-2 mb-2">
-          {directorSearchResults.length > 0
-            ? directorSearchResults.map(director => (
-                <button
-                  type="button"
-                  key={director.id}
-                  className={`px-3 py-1 rounded-full border text-sm flex items-center ${selectedDirectors.some(a => a.id === director.id) ? 'bg-accent-gold text-black border-accent-gold' : 'bg-gray-800 text-white border-gray-700'}`}
-                  onClick={() => toggle(selectedDirectors, setSelectedDirectors, director, 3)}
-                  disabled={!selectedDirectors.some(a => a.id === director.id) && selectedDirectors.length >= 3}
-                >
-                  {director.profile_path && <img src={`https://image.tmdb.org/t/p/w45${director.profile_path}`} alt={director.name} className="w-6 h-6 rounded-full mr-2" />}
-                  {director.name}
-                </button>
-              ))
-            : directors.length > 0
-              ? directors.map(director => (
-                  <button
-                    type="button"
-                    key={director.id}
-                    className={`px-3 py-1 rounded-full border text-sm flex items-center ${selectedDirectors.some(a => a.id === director.id) ? 'bg-accent-gold text-black border-accent-gold' : 'bg-gray-800 text-white border-gray-700'}`}
-                    onClick={() => toggle(selectedDirectors, setSelectedDirectors, director, 3)}
-                    disabled={!selectedDirectors.some(a => a.id === director.id) && selectedDirectors.length >= 3}
-                  >
-                    {director.profile_path && <img src={`https://image.tmdb.org/t/p/w45${director.profile_path}`} alt={director.name} className="w-6 h-6 rounded-full mr-2" />}
-                    {director.name}
-                  </button>
-                ))
-              : <span className="text-gray-400">No popular directors found. Please search by name.</span>}
-        </div>
-      </div>
-      {/* Genres */}
-      <div>
-        <label className="block text-lg font-semibold text-gray-300 mb-2">Favorite Genres (Pick 3)</label>
-        <div className="flex flex-wrap gap-2">
-          {genres.map(genre => (
-            <button
-              type="button"
-              key={genre.id}
-              className={`px-3 py-1 rounded-full border text-sm ${selectedGenres.some(a => a.id === genre.id) ? 'bg-accent-gold text-black border-accent-gold' : 'bg-gray-800 text-white border-gray-700'}`}
-              onClick={() => toggle(selectedGenres, setSelectedGenres, genre, 3)}
-              disabled={!selectedGenres.some(a => a.id === genre.id) && selectedGenres.length >= 3}
-            >
-              {genre.name}
-            </button>
-          ))}
-        </div>
-      </div>
-      <Button type="submit" className="w-full bg-netflix hover:bg-red-700 text-white font-semibold py-3 rounded-lg mt-4" disabled={selectedActors.length !== 3 || selectedDirectors.length !== 3 || selectedGenres.length !== 3}>
-        Save Preferences & Continue
-      </Button>
-    </form>
-  );
-}
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -201,11 +19,7 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register, isLoading, error, user, updateUser } = useAuth();
   const [, setLocation] = useLocation();
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showVerify, setShowVerify] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendError, setResendError] = useState('');
-  const pollInterval = useRef<NodeJS.Timeout | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -225,11 +39,19 @@ export default function Register() {
       username: formData.username,
       displayName: formData.displayName,
     });
-    setShowOnboarding(true); // Go straight to onboarding/app
+    setShowWelcome(true); // Show welcome message
+    setTimeout(() => setLocation('/discover'), 1800);
   };
 
-  if (showOnboarding) {
-    return <OnboardingForm onComplete={() => setLocation('/swipe')} />;
+  if (showWelcome) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-deep-black">
+        <div className="bg-dark-char rounded-2xl p-8 shadow-2xl border border-gray-800 text-center max-w-md mx-auto">
+          <h2 className="text-3xl font-bold text-netflix mb-2">Welcome to Popcorn Picks! 🍿</h2>
+          <p className="text-gray-300 mb-4">Your account has been created.<br/>Redirecting to Discover...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
