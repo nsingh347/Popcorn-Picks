@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'wouter';
 import { Eye, EyeOff, Mail, Lock, User, Heart } from 'lucide-react';
@@ -198,9 +198,13 @@ export default function Register() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { register, isLoading, error } = useAuth();
+  const { register, isLoading, error, user, updateUser } = useAuth();
   const [, setLocation] = useLocation();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showVerify, setShowVerify] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendError, setResendError] = useState('');
+  const pollInterval = useRef<NodeJS.Timeout | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -220,11 +224,57 @@ export default function Register() {
       username: formData.username,
       displayName: formData.displayName,
     });
-    setShowOnboarding(true);
+    setShowVerify(true);
+  };
+
+  // Poll for email verification
+  useEffect(() => {
+    if (showVerify && user && !user.emailConfirmedAt) {
+      pollInterval.current = setInterval(async () => {
+        const { data, error } = await import('@/lib/supabaseClient').then(m => m.supabase.auth.getUser());
+        if (data?.user?.email_confirmed_at) {
+          updateUser({ ...user, emailConfirmedAt: new Date(data.user.email_confirmed_at) });
+          setShowVerify(false);
+          setShowOnboarding(true);
+          if (pollInterval.current) clearInterval(pollInterval.current);
+        }
+      }, 3000);
+      return () => { if (pollInterval.current) clearInterval(pollInterval.current); };
+    }
+  }, [showVerify, user, updateUser]);
+
+  // Resend verification email
+  const handleResend = async () => {
+    setResendLoading(true);
+    setResendError('');
+    try {
+      const { error } = await import('@/lib/supabaseClient').then(m => m.supabase.auth.resend({ type: 'signup', email: formData.email }));
+      if (error) throw error;
+    } catch (err: any) {
+      setResendError(err.message || 'Failed to resend email');
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   if (showOnboarding) {
     return <OnboardingForm onComplete={() => setLocation('/swipe')} />;
+  }
+
+  if (showVerify) {
+    return (
+      <div className="min-h-screen bg-deep-black flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-dark-char rounded-2xl p-8 shadow-2xl border border-gray-800 text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">Verify Your Email</h2>
+          <p className="text-gray-300 mb-6">We sent a verification link to <span className="font-semibold">{formData.email}</span>.<br/>Please check your inbox and click the link to verify your account.</p>
+          <Button onClick={handleResend} disabled={resendLoading} className="bg-netflix hover:bg-red-700 mb-2 w-full">
+            {resendLoading ? 'Resending...' : 'Resend Verification Email'}
+          </Button>
+          {resendError && <div className="text-red-400 text-sm mb-2">{resendError}</div>}
+          <div className="text-gray-400 text-sm">Once verified, this page will update automatically.</div>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -58,6 +58,7 @@ function mapSupabaseUser(user: any): User {
     avatar: user.user_metadata?.avatar || user.raw_user_meta_data?.avatar || '',
     createdAt: user.created_at ? new Date(user.created_at) : new Date(),
     updatedAt: new Date(),
+    emailConfirmedAt: user.email_confirmed_at ? new Date(user.email_confirmed_at) : null,
   };
 }
 

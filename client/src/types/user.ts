@@ -6,6 +6,7 @@ export interface User {
   avatar?: string;
   createdAt: Date;
   updatedAt: Date;
+  emailConfirmedAt: Date | null;
 }
 
 export interface UserProfile {

@@ -31,6 +31,7 @@ export function Navigation() {
     { href: '/swipe', label: 'Swipe' },
     { href: '/recommendations', label: 'Recommendations' },
     { href: '/watchlist', label: 'Watchlist' },
+    { href: '/trivia', label: 'Trivia' },
     { href: '/couples', label: 'Couples', icon: currentRelationship ? Heart : Users }
   ];
 

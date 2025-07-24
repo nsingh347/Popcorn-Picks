@@ -212,12 +212,15 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
 
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // End the relationship in the database for both users
+      if (state.currentRelationship && state.currentRelationship.id) {
+        await supabase
+          .from('relationship_requests')
+          .update({ status: 'ended', updated_at: new Date().toISOString() })
+          .eq('id', state.currentRelationship.id);
+      }
       localStorage.removeItem(`relationship_${user.id}`);
       localStorage.removeItem(`couple_preferences_${user.id}`);
-      
       dispatch({ type: 'SET_RELATIONSHIP', payload: null });
       dispatch({ type: 'SET_PARTNER', payload: null });
       dispatch({ type: 'SET_COUPLE_PREFERENCES', payload: null });
