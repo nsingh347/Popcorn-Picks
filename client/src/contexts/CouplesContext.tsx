@@ -175,11 +175,34 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const { error } = await supabase
+      // Update the relationship request to accepted
+      const { data: updatedRequests, error: updateError } = await supabase
         .from('relationship_requests')
         .update({ status: 'accepted', updated_at: new Date().toISOString() })
-        .eq('id', requestId);
-      if (error) throw error;
+        .eq('id', requestId)
+        .select();
+      if (updateError) throw updateError;
+      const acceptedRequest = updatedRequests && updatedRequests[0];
+      if (acceptedRequest) {
+        // Check if couple already exists
+        const { data: existingCouple, error: coupleError } = await supabase
+          .from('couples')
+          .select('id')
+          .or(`user1_id.eq.${acceptedRequest.sender_id},user2_id.eq.${acceptedRequest.sender_id}`)
+          .or(`user1_id.eq.${acceptedRequest.receiver_id},user2_id.eq.${acceptedRequest.receiver_id}`)
+          .eq('status', 'active')
+          .maybeSingle();
+        if (!existingCouple) {
+          // Insert new couple row
+          await supabase.from('couples').insert({
+            user1_id: acceptedRequest.sender_id,
+            user2_id: acceptedRequest.receiver_id,
+            status: 'active',
+            requested_by: acceptedRequest.sender_id,
+            created_at: new Date().toISOString(),
+          });
+        }
+      }
       fetchPendingRequests();
       loadCoupleData();
     } catch (error) {
