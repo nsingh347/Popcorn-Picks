@@ -51,8 +51,8 @@ function useMatchedMovies(coupleId: string | undefined) {
 
 export default function CouplesSwipe() {
   const { user } = useAuth();
-  const { currentRelationship, partner } = useCouples();
-  const coupleId = currentRelationship?.id;
+  const { partner } = useCouples();
+  const [coupleId, setCoupleId] = useState<string | undefined>(undefined);
   const [filters, setFilters] = useState<{ genreId?: number; year?: number; providerId?: number }>({});
   const [movies, setMovies] = useState<Movie[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -158,6 +158,22 @@ export default function CouplesSwipe() {
         console.error('TMDB Swipe Fetch Error:', err);
       });
   }, [filters]);
+
+  // Fetch the couple id from the couples table for the current user and their partner
+  useEffect(() => {
+    const fetchCoupleId = async () => {
+      if (!user || !partner) return;
+      const { data, error } = await supabase
+        .from('couples')
+        .select('id')
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .or(`user1_id.eq.${partner.id},user2_id.eq.${partner.id}`)
+        .eq('status', 'accepted')
+        .maybeSingle();
+      if (data && data.id) setCoupleId(data.id);
+    };
+    fetchCoupleId();
+  }, [user, partner]);
 
   // Filter bar
   const FilterBar = (
