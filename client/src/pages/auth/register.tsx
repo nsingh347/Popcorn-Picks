@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { tmdbService } from '@/services/tmdb';
+import { supabase } from '@/lib/supabaseClient';
 
 function OnboardingForm({ onComplete }: { onComplete: () => void }) {
   const [actors, setActors] = useState<any[]>([]);
@@ -231,7 +232,7 @@ export default function Register() {
   useEffect(() => {
     if (showVerify && user && !user.emailConfirmedAt) {
       pollInterval.current = setInterval(async () => {
-        const { data, error } = await import('@/lib/supabaseClient').then(m => m.supabase.auth.getUser());
+        const { data, error } = await supabase.auth.getUser();
         if (data?.user?.email_confirmed_at) {
           updateUser({ ...user, emailConfirmedAt: new Date(data.user.email_confirmed_at) });
           setShowVerify(false);
@@ -248,7 +249,7 @@ export default function Register() {
     setResendLoading(true);
     setResendError('');
     try {
-      const { error } = await import('@/lib/supabaseClient').then(m => m.supabase.auth.resend({ type: 'signup', email: formData.email }));
+      const { error } = await supabase.auth.resend({ type: 'signup', email: formData.email });
       if (error) throw error;
     } catch (err: any) {
       setResendError(err.message || 'Failed to resend email');
