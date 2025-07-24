@@ -9,6 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCouples } from '@/contexts/CouplesContext';
 import { useQuery } from '@tanstack/react-query';
 import { tmdbService } from '@/services/tmdb';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
 function ConfettiPopup({ show, onClose }: { show: boolean; onClose: () => void }) {
   if (!show) return null;
@@ -62,6 +64,7 @@ export default function Couples() {
 
   const [partnerEmail, setPartnerEmail] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
+  const [senderUsernames, setSenderUsernames] = useState<{ [id: string]: string }>({});
 
   // Fetch matched movies (date night)
   const matchedMovieIds = couplePreferences?.sharedMovies || [];
@@ -70,6 +73,25 @@ export default function Couples() {
     queryFn: async () => Promise.all(matchedMovieIds.map((id: number) => tmdbService.getMovieDetails(id))),
     enabled: matchedMovieIds.length > 0,
   });
+
+  // Fetch usernames for all sender_ids in pendingRequests
+  useEffect(() => {
+    const fetchUsernames = async () => {
+      const ids = pendingRequests.map(r => r.sender_id).filter(Boolean);
+      const uniqueIds = Array.from(new Set(ids));
+      if (uniqueIds.length === 0) return;
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, username')
+        .in('id', uniqueIds);
+      if (data) {
+        const map: { [id: string]: string } = {};
+        data.forEach((u: any) => { map[u.id] = u.username; });
+        setSenderUsernames(map);
+      }
+    };
+    fetchUsernames();
+  }, [pendingRequests]);
 
   const handleSendRequest = async () => {
     if (partnerEmail.trim()) {
@@ -283,7 +305,10 @@ export default function Couples() {
                           {isReceiver ? 'Request from your partner' : 'Request you sent'}
                         </p>
                         <p className="text-gray-400 text-sm">
-                          {isReceiver ? `From: ${request.sender_id}` : `To: ${request.receiver_id}`}<br/>
+                          {isReceiver
+                            ? `From: @${senderUsernames[request.sender_id] || request.sender_id}`
+                            : `To: @${senderUsernames[request.receiver_id] || request.receiver_id}`}
+                          <br/>
                           Requested on {new Date(request.created_at || request.requestedAt).toLocaleDateString()}
                         </p>
                       </div>
