@@ -115,6 +115,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'SET_ERROR', payload: null });
 
+    // Client-side validation
+    if (!data.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
+      dispatch({ type: 'SET_ERROR', payload: 'Please enter a valid email address.' });
+      dispatch({ type: 'SET_LOADING', payload: false });
+      return;
+    }
+    if (!data.password || data.password.length < 6) {
+      dispatch({ type: 'SET_ERROR', payload: 'Password must be at least 6 characters.' });
+      dispatch({ type: 'SET_LOADING', payload: false });
+      return;
+    }
+    if (!data.username || data.username.length < 3) {
+      dispatch({ type: 'SET_ERROR', payload: 'Username must be at least 3 characters.' });
+      dispatch({ type: 'SET_LOADING', payload: false });
+      return;
+    }
+
+    // Pre-check for existing email
+    const { data: existingEmail } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', data.email)
+      .single();
+    if (existingEmail) {
+      dispatch({ type: 'SET_ERROR', payload: 'Email already in use.' });
+      dispatch({ type: 'SET_LOADING', payload: false });
+      return;
+    }
+
+    // Pre-check for existing username
+    const { data: existingUsername } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', data.username)
+      .single();
+    if (existingUsername) {
+      dispatch({ type: 'SET_ERROR', payload: 'Username already in use.' });
+      dispatch({ type: 'SET_LOADING', payload: false });
+      return;
+    }
+
     try {
       const { data: signUpData, error } = await supabase.auth.signUp({
         email: data.email,
@@ -126,7 +167,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
         },
       });
-      if (error) throw error;
+      if (error) {
+        if (error.message && error.message.includes('duplicate key value')) {
+          dispatch({ type: 'SET_ERROR', payload: 'Email or username already in use.' });
+        } else {
+          dispatch({ type: 'SET_ERROR', payload: error.message || 'Registration failed' });
+        }
+        return;
+      }
       const user = signUpData.user;
       if (!user) throw new Error('No user returned');
       const mappedUser = mapSupabaseUser(user);
@@ -134,7 +182,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('user_data', JSON.stringify(mappedUser));
       dispatch({ type: 'SET_USER', payload: mappedUser });
     } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.message || 'Registration failed' });
+      if (error.message && error.message.includes('duplicate key value')) {
+        dispatch({ type: 'SET_ERROR', payload: 'Email or username already in use.' });
+      } else {
+        dispatch({ type: 'SET_ERROR', payload: error.message || 'Registration failed' });
+      }
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
