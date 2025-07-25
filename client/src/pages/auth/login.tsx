@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'wouter';
 import { Eye, EyeOff, Mail, Lock, Heart } from 'lucide-react';
@@ -10,23 +10,26 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading, error } = useAuth();
+  const { login, isLoading, error, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const prevError = error;
     await login({ email, password });
-    // Only show welcome popup and redirect if login was successful (no error)
-    if (!error && !prevError) {
+    // Do not show popup/redirect here; handle in useEffect
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && !error) {
       setShowSuccess(true);
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setShowSuccess(false);
         setLocation('/discover');
       }, 1800);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [isAuthenticated, error, setLocation]);
 
   return (
     <div className="min-h-screen bg-deep-black flex items-center justify-center p-4">
