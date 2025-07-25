@@ -14,6 +14,9 @@ import { useQuery as useSupabaseQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import CouplesSwipe from './couples/swipe';
 import { MovieCard } from '@/components/movie-card';
+import useRealtimeMatchedMovies from '@/hooks/useRealtimeMatchedMovies';
+import useRealtimeJointWatchlist from '@/hooks/useRealtimeJointWatchlist';
+import useCoupleRecommendations from '@/hooks/useCoupleRecommendations';
 
 function useMatchedMovies(coupleId: string | undefined) {
   return useSupabaseQuery({
@@ -70,84 +73,6 @@ function ConfettiPopup({ show, onClose }: { show: boolean; onClose: () => void }
   );
 }
 
-// Real-time hook for matched movies
-function useRealtimeMatchedMovies(coupleId: string | undefined) {
-  const [matchedMovies, setMatchedMovies] = useState<any[]>([]);
-  useEffect(() => {
-    if (!coupleId) return;
-    let subscription: any;
-    const fetchMovies = async () => {
-      const { data, error } = await supabase
-        .from('matched_movies')
-        .select('movie_id')
-        .eq('couple_id', coupleId);
-      if (data) {
-        const details = await Promise.all(data.map((m: any) => tmdbService.getMovieDetails(m.movie_id)));
-        setMatchedMovies(details);
-      }
-    };
-    fetchMovies();
-    subscription = supabase
-      .channel('matched_movies')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'matched_movies', filter: `couple_id=eq.${coupleId}` }, fetchMovies)
-      .subscribe();
-    return () => { if (subscription) supabase.removeChannel(subscription); };
-  }, [coupleId]);
-  return matchedMovies;
-}
-
-// Real-time hook for joint watchlist
-function useRealtimeJointWatchlist(coupleId: string | undefined) {
-  const [watchlist, setWatchlist] = useState<any[]>([]);
-  useEffect(() => {
-    if (!coupleId) return;
-    let subscription: any;
-    const fetchWatchlist = async () => {
-      const { data, error } = await supabase
-        .from('joint_watchlists')
-        .select('movie_id')
-        .eq('couple_id', coupleId);
-      if (data) {
-        const details = await Promise.all(data.map((m: any) => tmdbService.getMovieDetails(m.movie_id)));
-        setWatchlist(details);
-      }
-    };
-    fetchWatchlist();
-    subscription = supabase
-      .channel('joint_watchlists')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'joint_watchlists', filter: `couple_id=eq.${coupleId}` }, fetchWatchlist)
-      .subscribe();
-    return () => { if (subscription) supabase.removeChannel(subscription); };
-  }, [coupleId]);
-  return watchlist;
-}
-
-// Couple recommendations based on liked movies
-function useCoupleRecommendations(coupleId: string | undefined) {
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  useEffect(() => {
-    if (!coupleId) return;
-    const fetchRecommendations = async () => {
-      // Get all liked movies for this couple
-      const { data: swipes } = await supabase
-        .from('couple_swipes')
-        .select('movie_id')
-        .eq('couple_id', coupleId)
-        .eq('liked', true);
-      if (!swipes || swipes.length === 0) { setRecommendations([]); return; }
-      // Get genres from those movies
-      const movieDetails = await Promise.all(swipes.map((s: any) => tmdbService.getMovieDetails(s.movie_id)));
-      const genreIds = Array.from(new Set(movieDetails.flatMap((m: any) => m.genre_ids || [])));
-      // Get recommendations from TMDB
-      const recs = await tmdbService.getRecommendationsAdvanced({ likedGenres: genreIds });
-      setRecommendations(recs);
-    };
-    fetchRecommendations();
-    // Optionally, add a real-time listener for couple_swipes
-  }, [coupleId]);
-  return recommendations;
-}
-
 export default function Couples() {
   const { user, logout } = useAuth();
   // Use any for pendingRequests to match DB fields
@@ -160,6 +85,7 @@ export default function Couples() {
   // Fetch matched movies for the couple (hook at top level)
   const matchedMovies = useRealtimeMatchedMovies(coupleId);
   const coupleRecommendations = useCoupleRecommendations(coupleId);
+  const jointWatchlist = useRealtimeJointWatchlist(coupleId);
 
   // Fetch usernames for all sender_ids in pendingRequests
   useEffect(() => {
@@ -210,8 +136,6 @@ export default function Couples() {
   // Fallbacks for isLoading and error
   const isLoading = false;
   const error = null;
-
-  const jointWatchlist = useRealtimeJointWatchlist(coupleId);
 
   return (
     <div className="min-h-screen bg-deep-black pt-20 pb-8">
