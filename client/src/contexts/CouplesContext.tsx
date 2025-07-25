@@ -291,38 +291,40 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addToJointWatchlist = async (movieId: number) => {
-    if (!user || !state.couplePreferences) return;
-
+    if (!user || !coupleId) return;
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const updatedPreferences = {
-        ...state.couplePreferences,
-        jointWatchlist: [...state.couplePreferences.jointWatchlist, movieId],
-        updatedAt: new Date()
-      };
-      localStorage.setItem(`couple_preferences_${user.id}`, JSON.stringify(updatedPreferences));
-      dispatch({ type: 'SET_COUPLE_PREFERENCES', payload: updatedPreferences });
+      // Check for duplicate
+      const { data: existing } = await supabase
+        .from('joint_watchlists')
+        .select('id')
+        .eq('couple_id', coupleId)
+        .eq('movie_id', movieId)
+        .maybeSingle();
+      if (!existing) {
+        await supabase.from('joint_watchlists').insert({
+          couple_id: coupleId,
+          movie_id: movieId,
+        });
+      }
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to add to watchlist' });
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to add to joint watchlist' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
   const removeFromJointWatchlist = async (movieId: number) => {
-    if (!user || !state.couplePreferences) return;
-
+    if (!user || !coupleId) return;
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const updatedPreferences = {
-        ...state.couplePreferences,
-        jointWatchlist: state.couplePreferences.jointWatchlist.filter(id => id !== movieId),
-        updatedAt: new Date()
-      };
-      localStorage.setItem(`couple_preferences_${user.id}`, JSON.stringify(updatedPreferences));
-      dispatch({ type: 'SET_COUPLE_PREFERENCES', payload: updatedPreferences });
+      await supabase
+        .from('joint_watchlists')
+        .delete()
+        .eq('couple_id', coupleId)
+        .eq('movie_id', movieId);
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to remove from watchlist' });
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to remove from joint watchlist' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }

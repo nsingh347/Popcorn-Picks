@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCouples } from '@/contexts/CouplesContext';
 import { useQuery } from '@tanstack/react-query';
 import { tmdbService } from '@/services/tmdb';
-import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useQuery as useSupabaseQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -71,9 +70,88 @@ function ConfettiPopup({ show, onClose }: { show: boolean; onClose: () => void }
   );
 }
 
+// Real-time hook for matched movies
+function useRealtimeMatchedMovies(coupleId: string | undefined) {
+  const [matchedMovies, setMatchedMovies] = useState<any[]>([]);
+  useEffect(() => {
+    if (!coupleId) return;
+    let subscription: any;
+    const fetchMovies = async () => {
+      const { data, error } = await supabase
+        .from('matched_movies')
+        .select('movie_id')
+        .eq('couple_id', coupleId);
+      if (data) {
+        const details = await Promise.all(data.map((m: any) => tmdbService.getMovieDetails(m.movie_id)));
+        setMatchedMovies(details);
+      }
+    };
+    fetchMovies();
+    subscription = supabase
+      .channel('matched_movies')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matched_movies', filter: `couple_id=eq.${coupleId}` }, fetchMovies)
+      .subscribe();
+    return () => { if (subscription) supabase.removeChannel(subscription); };
+  }, [coupleId]);
+  return matchedMovies;
+}
+
+// Real-time hook for joint watchlist
+function useRealtimeJointWatchlist(coupleId: string | undefined) {
+  const [watchlist, setWatchlist] = useState<any[]>([]);
+  useEffect(() => {
+    if (!coupleId) return;
+    let subscription: any;
+    const fetchWatchlist = async () => {
+      const { data, error } = await supabase
+        .from('joint_watchlists')
+        .select('movie_id')
+        .eq('couple_id', coupleId);
+      if (data) {
+        const details = await Promise.all(data.map((m: any) => tmdbService.getMovieDetails(m.movie_id)));
+        setWatchlist(details);
+      }
+    };
+    fetchWatchlist();
+    subscription = supabase
+      .channel('joint_watchlists')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'joint_watchlists', filter: `couple_id=eq.${coupleId}` }, fetchWatchlist)
+      .subscribe();
+    return () => { if (subscription) supabase.removeChannel(subscription); };
+  }, [coupleId]);
+  return watchlist;
+}
+
+// Couple recommendations based on liked movies
+function useCoupleRecommendations(coupleId: string | undefined) {
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  useEffect(() => {
+    if (!coupleId) return;
+    const fetchRecommendations = async () => {
+      // Get all liked movies for this couple
+      const { data: swipes } = await supabase
+        .from('couple_swipes')
+        .select('movie_id')
+        .eq('couple_id', coupleId)
+        .eq('liked', true);
+      if (!swipes || swipes.length === 0) { setRecommendations([]); return; }
+      // Get genres from those movies
+      const movieDetails = await Promise.all(swipes.map((s: any) => tmdbService.getMovieDetails(s.movie_id)));
+      const genreIds = Array.from(new Set(movieDetails.flatMap((m: any) => m.genre_ids || [])));
+      // Get recommendations from TMDB
+      const recs = await tmdbService.getRecommendationsAdvanced({ likedGenres: genreIds });
+      setRecommendations(recs);
+    };
+    fetchRecommendations();
+    // Optionally, add a real-time listener for couple_swipes
+  }, [coupleId]);
+  return recommendations;
+}
+
 export default function Couples() {
   const { user, logout } = useAuth();
-  const { currentRelationship, partner, couplePreferences, pendingRequests, sendRelationshipRequest, acceptRelationshipRequest, declineRelationshipRequest, endRelationship, coupleId } = useCouples();
+  // Use any for pendingRequests to match DB fields
+  const { currentRelationship, partner, couplePreferences, pendingRequests, sendRelationshipRequest, acceptRelationshipRequest, declineRelationshipRequest, endRelationship, coupleId, addToJointWatchlist, removeFromJointWatchlist } = useCouples() as any;
 
   const [partnerEmail, setPartnerEmail] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
@@ -127,6 +205,12 @@ export default function Couples() {
       </div>
     );
   }
+
+  // Fallbacks for isLoading and error
+  const isLoading = false;
+  const error = null;
+
+  const jointWatchlist = useRealtimeJointWatchlist(coupleId);
 
   return (
     <div className="min-h-screen bg-deep-black pt-20 pb-8">
@@ -186,8 +270,28 @@ export default function Couples() {
             <div className="text-center text-white">Personalized movie recommendations for you and your partner.</div>
           </TabsContent>
           <TabsContent value="watchlist">
-            {/* TODO: Show joint watchlist */}
-            <div className="text-center text-white">Your shared watchlist will appear here.</div>
+            {currentRelationship ? (
+              !jointWatchlist.length ? (
+                <div className="text-center text-white">Your shared watchlist is empty. Add movies to your joint watchlist!</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {jointWatchlist.map((movie: any) => (
+                    <div key={movie.id} className="relative">
+                      <MovieCard movie={movie} />
+                      <Button
+                        variant="outline"
+                        className="absolute top-2 right-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                        onClick={() => removeFromJointWatchlist(movie.id)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              <div className="text-center text-white">Your shared watchlist will appear here.</div>
+            )}
           </TabsContent>
         </Tabs>
 
@@ -346,29 +450,29 @@ export default function Couples() {
             <h3 className="text-xl font-semibold text-white mb-4">Pending Requests</h3>
             <div className="space-y-4">
               {pendingRequests
-                .filter(request => request.status === 'pending')
-                .map((request) => {
-                  const isReceiver = user.id === request.receiver_id;
-                  const isSender = user.id === request.sender_id;
+                .filter((r: any) => r.status === 'pending')
+                .map((r: any) => {
+                  const isReceiver = user.id === r.receiver_id;
+                  const isSender = user.id === r.sender_id;
                   return (
-                    <div key={request.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                    <div key={r.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
                       <div>
                         <p className="text-white font-medium">
                           {isReceiver ? 'Request from your partner' : 'Request you sent'}
                         </p>
                         <p className="text-gray-400 text-sm">
                           {isReceiver
-                            ? `From: @${senderUsernames[request.sender_id] || request.sender_id}`
-                            : `To: @${senderUsernames[request.receiver_id] || request.receiver_id}`}
+                            ? `From: @${senderUsernames[r.sender_id] || r.sender_id}`
+                            : `To: @${senderUsernames[r.receiver_id] || r.receiver_id}`}
                           <br/>
-                          Requested on {new Date(request.created_at || request.requestedAt).toLocaleDateString()}
+                          Requested on {new Date(r.created_at || r.requestedAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex space-x-2">
                         {isReceiver && (
                           <>
                             <Button
-                              onClick={() => { acceptRelationshipRequest(request.id); window.sessionStorage.setItem('justAcceptedCouple', 'true'); }}
+                              onClick={() => { acceptRelationshipRequest(r.id); window.sessionStorage.setItem('justAcceptedCouple', 'true'); }}
                               size="sm"
                               className="bg-green-600 hover:bg-green-700"
                             >
@@ -376,7 +480,7 @@ export default function Couples() {
                               Accept
                             </Button>
                             <Button
-                              onClick={() => declineRelationshipRequest(request.id)}
+                              onClick={() => declineRelationshipRequest(r.id)}
                               size="sm"
                               variant="outline"
                               className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
@@ -477,9 +581,6 @@ export default function Couples() {
                           )}
                         </div>
                         <Button className="bg-pink-500 text-white w-full mb-2" onClick={() => window.open(`https://www.themoviedb.org/movie/${movie.id}`, '_blank')}>Watch Together</Button>
-                        <Button variant="outline" className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white" onClick={() => removeMatchedMovie(movie.id)}>
-                          Remove
-                        </Button>
                       </div>
                     );
                   })}
