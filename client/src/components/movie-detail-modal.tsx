@@ -217,9 +217,29 @@ export function MovieDetailModal({ movieId, isOpen, onClose }: MovieDetailModalP
                   ) : watchProviders && watchProviders.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {watchProviders.map((provider) => (
-                        <Badge key={provider} className="bg-blue-700/80 text-white border-blue-400/40">
-                          {provider}
-                        </Badge>
+                        provider.link ? (
+                          <a
+                            key={provider.name}
+                            href={provider.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="no-underline"
+                          >
+                            <Badge className="bg-blue-700/80 text-white border-blue-400/40 cursor-pointer hover:bg-blue-800 transition">
+                              {provider.logo_path && (
+                                <img src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`} alt={provider.name} className="inline-block w-5 h-5 mr-1 align-middle" />
+                              )}
+                              {provider.name}
+                            </Badge>
+                          </a>
+                        ) : (
+                          <Badge key={provider.name} className="bg-blue-700/80 text-white border-blue-400/40 opacity-60 cursor-not-allowed">
+                            {provider.logo_path && (
+                              <img src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`} alt={provider.name} className="inline-block w-5 h-5 mr-1 align-middle" />
+                            )}
+                            {provider.name}
+                          </Badge>
+                        )
                       ))}
                     </div>
                   ) : (

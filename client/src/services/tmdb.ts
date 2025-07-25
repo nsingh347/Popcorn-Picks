@@ -282,14 +282,20 @@ class TMDBService {
 
   /**
    * Fetch streaming platforms (watch providers) for a movie.
+   * Returns array of { name, logo_path, link } for each provider.
    */
-  async getWatchProviders(movieId: number): Promise<string[]> {
+  async getWatchProviders(movieId: number): Promise<{ name: string, logo_path: string | null, link: string | null }[]> {
     try {
       const data = await this.fetchFromTMDB(`/movie/${movieId}/watch/providers`);
       // Default to US, fallback to any available
       const country = data.results?.US ? 'US' : Object.keys(data.results || {})[0];
       const providers = data.results?.[country]?.flatrate || [];
-      return providers.map((p: any) => p.provider_name);
+      const link = data.results?.[country]?.link || null;
+      return providers.map((p: any) => ({
+        name: p.provider_name,
+        logo_path: p.logo_path || null,
+        link: link // This is the TMDB landing page for the movie on the provider
+      }));
     } catch (error) {
       console.error('Error fetching watch providers:', error);
       return [];
