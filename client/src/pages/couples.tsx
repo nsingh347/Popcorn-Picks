@@ -11,7 +11,6 @@ import { useQuery } from '@tanstack/react-query';
 import { tmdbService } from '@/services/tmdb';
 import { supabase } from '@/lib/supabaseClient';
 import { useQuery as useSupabaseQuery } from '@tanstack/react-query';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import CouplesSwipe from './couples/swipe';
 import { MovieCard } from '@/components/movie-card';
 import useRealtimeMatchedMovies from '@/hooks/useRealtimeMatchedMovies';
@@ -155,61 +154,6 @@ export default function Couples() {
             create joint watchlists, and get personalized recommendations as a couple.
           </p>
         </div>
-
-        {/* Tabs for Couple Features */}
-        <Tabs defaultValue="matched" className="mb-12">
-          <TabsList className="flex justify-center mb-8">
-            <TabsTrigger value="matched">Matched For You</TabsTrigger>
-            <TabsTrigger value="recommendations">Couple Recommendations</TabsTrigger>
-            <TabsTrigger value="watchlist">Joint Watchlist</TabsTrigger>
-          </TabsList>
-          <TabsContent value="matched">
-            {!matchedMovies.length ? (
-              <div className="text-center text-white">No matched movies yet. Swipe right together to match!</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {matchedMovies.map((movie: any) => (
-                  <MovieCard key={movie.id} movie={movie} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-          <TabsContent value="recommendations">
-            {!coupleRecommendations.length ? (
-              <div className="text-center text-white">No recommendations yet. Start swiping together to get personalized recommendations!</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {coupleRecommendations.map((movie: any) => (
-                  <MovieCard key={movie.id} movie={movie} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-          <TabsContent value="watchlist">
-            {currentRelationship ? (
-              !jointWatchlist.length ? (
-                <div className="text-center text-white">Your shared watchlist is empty. Add movies to your joint watchlist!</div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {jointWatchlist.map((movie: any) => (
-                    <div key={movie.id} className="relative">
-                      <MovieCard movie={movie} />
-                      <Button
-                        variant="outline"
-                        className="absolute top-2 right-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                        onClick={() => removeFromJointWatchlist(movie.id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )
-            ) : (
-              <div className="text-center text-white">Your shared watchlist will appear here.</div>
-            )}
-          </TabsContent>
-        </Tabs>
 
         {/* User Info */}
         <motion.div
@@ -417,6 +361,72 @@ export default function Couples() {
           </motion.div>
         )}
 
+        {/* Matched For You / Date Night Matches */}
+        <motion.div
+          className="bg-dark-char rounded-2xl p-8 mb-8 border border-pink-500/20"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+        >
+          <h2 className="text-2xl font-bold text-pink-500 mb-6 text-center">Date Night Matches</h2>
+          {!matchedMovies.length ? (
+            <div className="text-center text-white">No matched movies yet. Swipe right together to match!</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {matchedMovies.map((movie: any) => (
+                <MovieCard key={movie.id} movie={movie} />
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Couple Recommendations */}
+        <motion.div
+          className="bg-dark-char rounded-2xl p-8 mb-8 border border-yellow-500/20"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <h2 className="text-2xl font-bold text-yellow-500 mb-6 text-center">Couple Recommendations</h2>
+          {!coupleRecommendations.length ? (
+            <div className="text-center text-white">No recommendations yet. Start swiping together to get personalized recommendations!</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {coupleRecommendations.map((movie: any) => (
+                <MovieCard key={movie.id} movie={movie} />
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Joint Watchlist */}
+        <motion.div
+          className="bg-dark-char rounded-2xl p-8 mb-8 border border-pink-500/20"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.35 }}
+        >
+          <h2 className="text-2xl font-bold text-pink-500 mb-6 text-center">Joint Watchlist</h2>
+          {!jointWatchlist.length ? (
+            <div className="text-center text-white">Your shared watchlist is empty. Add movies to your joint watchlist!</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {jointWatchlist.map((movie: any) => (
+                <div key={movie.id} className="relative">
+                  <MovieCard movie={movie} />
+                  <Button
+                    variant="outline"
+                    className="absolute top-2 right-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                    onClick={() => removeFromJointWatchlist(movie.id)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
         {/* Features Preview */}
         <motion.div
           className="grid md:grid-cols-2 gap-8"
@@ -456,57 +466,6 @@ export default function Couples() {
             </Link>
           </div>
         </motion.div>
-
-        {currentRelationship && (
-          <>
-            {/* Date Night Section */}
-            <motion.div
-              className="bg-dark-char rounded-2xl p-8 mb-8 border border-pink-500/20"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.25 }}
-            >
-              <h2 className="text-2xl font-bold text-pink-500 mb-6 text-center">Date Night Matches</h2>
-              {isLoading ? (
-                <div className="text-center text-white py-8">Loading matched movies...</div>
-              ) : matchedMovies && matchedMovies.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {matchedMovies.map((movie: any) => {
-                    const { data: providers, isLoading: loadingProviders } = useQuery({
-                      queryKey: ['watch-providers', movie.id],
-                      queryFn: () => tmdbService.getWatchProviders(movie.id),
-                      enabled: !!movie.id,
-                    });
-                    return (
-                      <div key={movie.id} className="bg-gray-900 rounded-xl p-4 flex flex-col items-center">
-                        <img src={tmdbService.getImageUrl(movie.poster_path, 'w185')} alt={movie.title} className="w-28 h-40 object-cover rounded mb-2" />
-                        <h3 className="text-lg font-semibold text-white text-center mb-2">{movie.title}</h3>
-                        {/* Streaming Platforms */}
-                        <div className="mb-2">
-                          <span className="text-xs text-gray-400">Available On:</span>
-                          {loadingProviders ? (
-                            <span className="text-xs text-gray-400 ml-2">Loading...</span>
-                          ) : providers && providers.length > 0 ? (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {providers.map((provider: string) => (
-                                <Badge key={provider} className="bg-blue-700/80 text-white border-blue-400/40 text-xs">{provider}</Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-400 ml-2">Not available for streaming</span>
-                          )}
-                        </div>
-                        <Button className="bg-pink-500 text-white w-full mb-2" onClick={() => window.open(`https://www.themoviedb.org/movie/${movie.id}`, '_blank')}>Watch Together</Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center text-gray-400 py-8">No matched movies yet. Start swiping to find your next date night pick!</div>
-              )}
-            </motion.div>
-          </>
-        )}
       </div>
       <ConfettiPopup show={showConfetti} onClose={() => setShowConfetti(false)} />
     </div>
