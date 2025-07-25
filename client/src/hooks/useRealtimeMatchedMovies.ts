@@ -15,6 +15,7 @@ export default function useRealtimeMatchedMovies(coupleId: string | undefined) {
       if (data) {
         const details = await Promise.all(data.map((m: any) => tmdbService.getMovieDetails(m.movie_id)));
         setMatchedMovies(details);
+        console.log('useRealtimeMatchedMovies: matchedMovies', details);
       }
     };
     fetchMovies();

@@ -89,26 +89,31 @@ export default function Swipe() {
 
     // --- Couple match logic ---
     if (direction === 'right' && coupleId) {
+      console.log('Swipe: coupleId', coupleId, 'user', currentRelationship?.user1Id || currentRelationship?.user2Id, 'movie', movie.id);
       // Upsert this user's swipe into couple_swipes
-      await supabase.from('couple_swipes').upsert({
+      const upsertResult = await supabase.from('couple_swipes').upsert({
         couple_id: coupleId,
         user_id: currentRelationship?.user1Id || currentRelationship?.user2Id, // fallback if needed
         movie_id: movie.id,
         liked: true,
       });
+      console.log('Upsert to couple_swipes result:', upsertResult);
       // Check if both users have swiped right on this movie
-      const { data: swipes } = await supabase
+      const { data: swipes, error: swipesError } = await supabase
         .from('couple_swipes')
         .select('user_id')
         .eq('couple_id', coupleId)
         .eq('movie_id', movie.id)
         .eq('liked', true);
+      console.log('Swipes for this movie:', swipes, 'Error:', swipesError);
       if (swipes && swipes.length === 2) {
         // Upsert into matched_movies
-        await supabase.from('matched_movies').upsert({
+        const upsertMatch = await supabase.from('matched_movies').upsert({
           couple_id: coupleId,
           movie_id: movie.id,
         });
+        console.log('Upsert to matched_movies result:', upsertMatch);
+        console.log('MATCH DETECTED for movie', movie.id);
         setMatchedMovie(movie);
         setShowMatch(true);
       }
