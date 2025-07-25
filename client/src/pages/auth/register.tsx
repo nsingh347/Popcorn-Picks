@@ -20,16 +20,22 @@ export default function Register() {
   const { register, isLoading, error, user, updateUser } = useAuth();
   const [, setLocation] = useLocation();
   const [showWelcome, setShowWelcome] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
+    if (error) {
+      // Clear error when user starts typing
+      updateUser && updateUser(null); // If updateUser is used for error, otherwise set error to null if available
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setHasSubmitted(true);
     if (formData.password !== formData.confirmPassword) {
       return; // TODO: Show error
     }
@@ -201,7 +207,7 @@ export default function Register() {
             )}
 
             {/* Error Message */}
-            {error && (
+            {hasSubmitted && error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
