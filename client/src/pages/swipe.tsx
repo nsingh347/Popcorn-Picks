@@ -107,11 +107,11 @@ export default function Swipe() {
         .eq('liked', true);
       console.log('Swipes for this movie:', swipes, 'Error:', swipesError);
       if (swipes && swipes.length === 2) {
-        // Upsert into matched_movies
+        // Upsert into matched_movies with conflict target
         const upsertMatch = await supabase.from('matched_movies').upsert({
           couple_id: coupleId,
           movie_id: movie.id,
-        });
+        }, { onConflict: ['couple_id', 'movie_id'] });
         console.log('Upsert to matched_movies result:', upsertMatch);
         console.log('MATCH DETECTED for movie', movie.id);
         setMatchedMovie(movie);
@@ -180,12 +180,12 @@ export default function Swipe() {
 
   return (
     <div className="min-h-screen bg-deep-black pt-20 pb-8">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-2 sm:px-6">
         {/* Filters */}
-        <div className="flex flex-wrap gap-8 justify-center mb-8">
+        <div className="flex flex-nowrap gap-4 sm:gap-8 justify-center mb-4 sm:mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
           {/* Genre Filter */}
-          <div className="flex flex-col items-start min-w-[200px]">
-            <label className="text-gray-300 mb-1 font-medium">Genre</label>
+          <div className="flex flex-col items-start min-w-[140px] sm:min-w-[200px]">
+            <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Genre</label>
             <Select
               options={[{ value: '', label: 'All Genres' }, ...genreOptions]}
               value={genreOptions.find(o => o.value === genreId) || { value: '', label: 'All Genres' }}
@@ -194,7 +194,7 @@ export default function Swipe() {
               placeholder="All Genres"
               classNamePrefix="react-select"
               styles={{
-                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white' }),
+                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white', minHeight: 36 }),
                 menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
                 singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
                 input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
@@ -213,8 +213,8 @@ export default function Swipe() {
             />
           </div>
           {/* Year Filter */}
-          <div className="flex flex-col items-start min-w-[140px]">
-            <label className="text-gray-300 mb-1 font-medium">Release Year</label>
+          <div className="flex flex-col items-start min-w-[100px] sm:min-w-[140px]">
+            <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Release Year</label>
             <Select
               options={[{ value: '', label: 'All Years' }, ...yearOptions]}
               value={yearOptions.find(o => o.value === year) || { value: '', label: 'All Years' }}
@@ -223,7 +223,7 @@ export default function Swipe() {
               placeholder="All Years"
               classNamePrefix="react-select"
               styles={{
-                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white' }),
+                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white', minHeight: 36 }),
                 menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
                 singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
                 input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
@@ -242,8 +242,8 @@ export default function Swipe() {
             />
           </div>
           {/* Provider Filter */}
-          <div className="flex flex-col items-start min-w-[220px]">
-            <label className="text-gray-300 mb-1 font-medium">Platform</label>
+          <div className="flex flex-col items-start min-w-[120px] sm:min-w-[220px]">
+            <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Platform</label>
             <Select
               options={[{ value: '', label: 'All Platforms' }, ...providerOptions]}
               value={providerOptions.find(o => o.value === providerId) || { value: '', label: 'All Platforms' }}
@@ -252,7 +252,7 @@ export default function Swipe() {
               placeholder="All Platforms"
               classNamePrefix="react-select"
               styles={{
-                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white' }),
+                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white', minHeight: 36 }),
                 menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
                 singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
                 input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
@@ -272,44 +272,44 @@ export default function Swipe() {
           </div>
         </div>
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-4 sm:mb-8">
           <motion.h1
-            className="text-4xl md:text-5xl font-bold mb-4"
+            className="text-2xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-4"
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6 }}
           >
             Discover Your <span className="text-netflix">Next Favorite</span>
           </motion.h1>
-          <p className="text-gray-300 text-lg mb-6">
+          <p className="text-gray-300 text-base sm:text-lg mb-4 sm:mb-6">
             Swipe right to like, left to pass. We'll learn your preferences!
           </p>
           
           {/* Progress */}
-          <div className="max-w-md mx-auto mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-400">Progress</span>
-              <span className="text-sm text-accent-gold">{swipeCount}/20 movies</span>
+          <div className="max-w-md mx-auto mb-4 sm:mb-6">
+            <div className="flex justify-between items-center mb-1 sm:mb-2">
+              <span className="text-xs sm:text-sm text-gray-400">Progress</span>
+              <span className="text-xs sm:text-sm text-accent-gold">{swipeCount}/20 movies</span>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
 
           {/* Stats */}
-          <div className="flex justify-center space-x-6 mb-8">
+          <div className="flex justify-center space-x-4 sm:space-x-6 mb-4 sm:mb-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-accent-gold">{swipeCount}</div>
-              <div className="text-sm text-gray-400">Movies Swiped</div>
+              <div className="text-lg sm:text-2xl font-bold text-accent-gold">{swipeCount}</div>
+              <div className="text-xs sm:text-sm text-gray-400">Movies Swiped</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">{getLikedGenres().length}</div>
-              <div className="text-sm text-gray-400">Liked Genres</div>
+              <div className="text-lg sm:text-2xl font-bold text-green-400">{getLikedGenres().length}</div>
+              <div className="text-xs sm:text-sm text-gray-400">Liked Genres</div>
             </div>
           </div>
         </div>
 
         {/* Swipe Area */}
         <div className="max-w-md mx-auto relative">
-          <div className="relative h-96 mb-20">
+          <div className="relative h-80 sm:h-96 mb-12 sm:mb-20">
             <AnimatePresence>
               {/* Current Movie Card */}
               {currentMovie && swipeCount < 20 && (
@@ -337,9 +337,9 @@ export default function Swipe() {
           </div>
 
           {/* Instructions */}
-          <div className="text-center mb-8">
-            <p className="text-gray-400 mb-2">Swipe or use buttons below</p>
-            <div className="flex justify-center space-x-2">
+          <div className="text-center mb-4 sm:mb-8">
+            <p className="text-gray-400 mb-2 text-sm sm:text-base">Swipe or use buttons below</p>
+            <div className="flex justify-center space-x-1 sm:space-x-2">
               {Array.from({ length: Math.min(currentMovies.length - currentIndex, 3) }).map((_, i) => (
                 <div
                   key={i}
@@ -353,22 +353,22 @@ export default function Swipe() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-center space-x-6 mb-8">
+        <div className="flex flex-col sm:flex-row justify-center items-center sm:space-x-6 space-y-2 sm:space-y-0 mb-6 sm:mb-8">
           <Button
             variant="outline"
             size="lg"
             onClick={resetSwipes}
-            className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            className="border-gray-600 text-gray-300 hover:bg-gray-800 w-full sm:w-auto"
           >
             <RotateCcw className="w-5 h-5 mr-2" />
             Reset
           </Button>
           
           {hasPreferences && (
-            <Link href="/recommendations">
+            <Link href="/recommendations" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="bg-accent-gold hover:bg-yellow-500 text-black font-semibold"
+                className="bg-accent-gold hover:bg-yellow-500 text-black font-semibold w-full sm:w-auto"
               >
                 <TrendingUp className="w-5 h-5 mr-2" />
                 Get Recommendations
@@ -385,11 +385,11 @@ export default function Swipe() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <h3 className="text-xl font-semibold mb-4 flex items-center justify-center">
-              <Star className="w-5 h-5 mr-2 text-accent-gold" />
+            <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4 flex items-center justify-center">
+              <Star className="w-4 h-4 mr-2 text-accent-gold" />
               Your Preferences
             </h3>
-            <p className="text-gray-400 mb-4">
+            <p className="text-gray-400 mb-2 sm:mb-4 text-sm sm:text-base">
               Based on your swipes, you seem to enjoy these genres:
             </p>
             <div className="flex flex-wrap justify-center gap-2">
@@ -410,25 +410,25 @@ export default function Swipe() {
         {swipeCount >= 20 && (
           <div className="text-center">
             <div className="text-6xl mb-4">🎉</div>
-            <h3 className="text-2xl font-bold mb-4">Great job! You've completed 20 swipes!</h3>
-            <p className="text-gray-400 mb-6">
+            <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">Great job! You've completed 20 swipes!</h3>
+            <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">
               You've discovered your preferences by swiping through 20 movies.
               {hasPreferences ? ' Your liked movies have been added to recommendations!' : ' Start again to discover more.'}
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Button onClick={startNewBatch} className="bg-netflix hover:bg-red-700 text-white">
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-4">
+              <Button onClick={startNewBatch} className="bg-netflix hover:bg-red-700 text-white w-full sm:w-auto">
                 <Play className="w-4 h-4 mr-2" />
                 Swipe More
               </Button>
               {hasPreferences && (
-                <Link href="/recommendations">
-                  <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+                <Link href="/recommendations" className="w-full sm:w-auto">
+                  <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 w-full sm:w-auto">
                     <TrendingUp className="w-4 h-4 mr-2" />
                     View Recommendations
                   </Button>
                 </Link>
               )}
-              <Button onClick={resetSwipes} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+              <Button onClick={resetSwipes} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 w-full sm:w-auto">
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Start Over
               </Button>
@@ -440,19 +440,19 @@ export default function Swipe() {
         {currentIndex >= currentMovies.length && !isLoadingMore && swipeCount < 20 && (
           <div className="text-center">
             <div className="text-6xl mb-4">🎬</div>
-            <h3 className="text-2xl font-bold mb-4">That's all for now!</h3>
-            <p className="text-gray-400 mb-6">
+            <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">That's all for now!</h3>
+            <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">
               You've swiped through all available movies. 
               {hasPreferences ? ' Check out your personalized recommendations!' : ' Start again to discover more.'}
             </p>
-            <div className="flex justify-center space-x-4">
-              <Button onClick={resetSwipes} variant="outline">
+            <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
+              <Button onClick={resetSwipes} variant="outline" className="w-full sm:w-auto">
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Start Over
               </Button>
               {hasPreferences && (
-                <Link href="/recommendations">
-                  <Button className="bg-netflix hover:bg-red-700">
+                <Link href="/recommendations" className="w-full sm:w-auto">
+                  <Button className="bg-netflix hover:bg-red-700 w-full sm:w-auto">
                     <TrendingUp className="w-4 h-4 mr-2" />
                     View Recommendations
                   </Button>
