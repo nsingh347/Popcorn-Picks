@@ -16,12 +16,16 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const prevError = error;
     await login({ email, password });
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      setLocation('/discover');
-    }, 1800);
+    // Only show welcome popup and redirect if login was successful (no error)
+    if (!error && !prevError) {
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        setLocation('/discover');
+      }, 1800);
+    }
   };
 
   return (
