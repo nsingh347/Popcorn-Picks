@@ -230,23 +230,11 @@ export default function Couples() {
                 </div>
               </div>
 
-              <div className="flex justify-center space-x-4">
-                <Link href="/couples/recommendations">
-                  <Button className="bg-pink-500 hover:bg-pink-600 text-white">
-                    <Star className="w-4 h-4 mr-2" />
-                    Couple Recommendations
-                  </Button>
-                </Link>
-                <Link href="/couples/watchlist">
-                  <Button variant="outline" className="border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white">
-                    <Heart className="w-4 h-4 mr-2" />
-                    Joint Watchlist
-                  </Button>
-                </Link>
+              <div className="flex justify-center space-x-4 mt-6">
                 <Button 
                   onClick={endRelationship}
                   variant="outline" 
-                  className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                  className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-semibold px-6 py-2 rounded-lg text-base shadow-md"
                 >
                   <UserX className="w-4 h-4 mr-2" />
                   End Relationship
@@ -363,12 +351,13 @@ export default function Couples() {
 
         {/* Matched For You / Date Night Matches */}
         <motion.div
-          className="bg-dark-char rounded-2xl p-8 mb-8 border border-pink-500/20"
+          className="bg-dark-char rounded-2xl p-8 mb-8 border border-pink-500/20 shadow-lg"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.25 }}
         >
-          <h2 className="text-2xl font-bold text-pink-500 mb-6 text-center">Date Night Matches</h2>
+          <h2 className="text-2xl font-bold text-pink-500 mb-4 text-center tracking-wide">🍿 Date Night Matches</h2>
+          <hr className="border-pink-500/30 mb-6" />
           {!matchedMovies.length ? (
             <div className="text-center text-white">No matched movies yet. Swipe right together to match!</div>
           ) : (
@@ -382,12 +371,13 @@ export default function Couples() {
 
         {/* Couple Recommendations */}
         <motion.div
-          className="bg-dark-char rounded-2xl p-8 mb-8 border border-yellow-500/20"
+          className="bg-dark-char rounded-2xl p-8 mb-8 border border-yellow-500/20 shadow-lg"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <h2 className="text-2xl font-bold text-yellow-500 mb-6 text-center">Couple Recommendations</h2>
+          <h2 className="text-2xl font-bold text-yellow-500 mb-4 text-center tracking-wide">⭐ Couple Recommendations</h2>
+          <hr className="border-yellow-500/30 mb-6" />
           {!coupleRecommendations.length ? (
             <div className="text-center text-white">No recommendations yet. Start swiping together to get personalized recommendations!</div>
           ) : (
@@ -401,12 +391,13 @@ export default function Couples() {
 
         {/* Joint Watchlist */}
         <motion.div
-          className="bg-dark-char rounded-2xl p-8 mb-8 border border-pink-500/20"
+          className="bg-dark-char rounded-2xl p-8 mb-8 border border-pink-500/20 shadow-lg"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.35 }}
         >
-          <h2 className="text-2xl font-bold text-pink-500 mb-6 text-center">Joint Watchlist</h2>
+          <h2 className="text-2xl font-bold text-pink-500 mb-4 text-center tracking-wide">💖 Joint Watchlist</h2>
+          <hr className="border-pink-500/30 mb-6" />
           {!jointWatchlist.length ? (
             <div className="text-center text-white">Your shared watchlist is empty. Add movies to your joint watchlist!</div>
           ) : (
