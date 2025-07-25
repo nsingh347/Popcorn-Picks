@@ -69,15 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-          // TODO: Validate token with backend
-          const userData = localStorage.getItem('user_data');
-          if (userData) {
-            const user = JSON.parse(userData);
-            dispatch({ type: 'SET_USER', payload: user });
-          }
-        }
+        // No localStorage: rely only on Supabase session
+        // Remove all getItem/setItem for auth_token/user_data
       } catch (error) {
         console.error('Auth check failed:', error);
       } finally {
@@ -101,8 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const user = data.user;
       if (!user) throw new Error('No user returned');
       const mappedUser = mapSupabaseUser(user);
-      localStorage.setItem('auth_token', data.session?.access_token || '');
-      localStorage.setItem('user_data', JSON.stringify(mappedUser));
+      // No localStorage
       dispatch({ type: 'SET_USER', payload: mappedUser });
     } catch (error: any) {
       dispatch({ type: 'SET_ERROR', payload: error.message || 'Login failed' });
@@ -178,8 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const user = signUpData.user;
       if (!user) throw new Error('No user returned');
       const mappedUser = mapSupabaseUser(user);
-      localStorage.setItem('auth_token', signUpData.session?.access_token || '');
-      localStorage.setItem('user_data', JSON.stringify(mappedUser));
+      // No localStorage
       dispatch({ type: 'SET_USER', payload: mappedUser });
     } catch (error: any) {
       if (error.message && error.message.includes('duplicate key value')) {
@@ -193,13 +184,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_data');
+    // No localStorage
     dispatch({ type: 'LOGOUT' });
   };
 
   const updateUser = (user: User) => {
-    localStorage.setItem('user_data', JSON.stringify(user));
+    // No localStorage
     dispatch({ type: 'SET_USER', payload: user });
   };
 

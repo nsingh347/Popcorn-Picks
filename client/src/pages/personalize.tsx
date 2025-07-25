@@ -28,22 +28,16 @@ export default function Personalize() {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['en']);
 
   useEffect(() => {
-    // Load from localStorage
-    const saved = localStorage.getItem('personalize_settings');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setTheme(parsed.theme || 'dark');
-      setAvatar(parsed.avatar || '');
-      setSelectedGenres(parsed.selectedGenres || []);
-      setSelectedLanguages(parsed.selectedLanguages || ['en']);
-    }
+    // No localStorage: do not load personalize_settings
+    setTheme('dark');
+    setAvatar('');
+    setSelectedGenres([]);
+    setSelectedLanguages(['en']);
   }, []);
 
   const saveSettings = () => {
-    localStorage.setItem('personalize_settings', JSON.stringify({
-      theme, avatar, selectedGenres, selectedLanguages
-    }));
-    window.location.reload(); // To apply theme
+    // No localStorage: do not save personalize_settings
+    window.location.reload(); // To apply theme (optional, or remove)
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {

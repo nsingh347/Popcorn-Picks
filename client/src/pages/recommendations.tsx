@@ -95,11 +95,8 @@ export default function Recommendations() {
   const dedupedFilteredAndSortedMovies = filteredAndSortedMovies.filter((movie, index, self) => self.findIndex(m => m.id === movie.id) === index);
 
   useEffect(() => {
-    const saved = localStorage.getItem('personalize_settings');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setPersonalize({ genres: parsed.selectedGenres || [], languages: parsed.selectedLanguages || [] });
-    }
+    // No localStorage: do not load personalize_settings
+    setPersonalize({ genres: [], languages: [] });
   }, []);
 
   if (!hasPreferences) {

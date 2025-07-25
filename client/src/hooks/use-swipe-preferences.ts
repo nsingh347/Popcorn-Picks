@@ -1,26 +1,18 @@
 import { useState, useEffect } from 'react';
 import type { SwipePreference } from '@/types/movie';
 
-const STORAGE_KEY = 'popcorn-picks-preferences';
-
 export function useSwipePreferences() {
   const [preferences, setPreferences] = useState<SwipePreference[]>([]);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setPreferences(JSON.parse(stored));
-      }
-    } catch (error) {
-      console.error('Error loading preferences:', error);
-    }
+    // No localStorage: do not load from or save to localStorage
+    setPreferences([]); // Always start empty
   }, []);
 
   const addPreference = (preference: SwipePreference) => {
     const newPreferences = [...preferences, preference];
     setPreferences(newPreferences);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newPreferences));
+    // No localStorage
   };
 
   const getLikedGenres = (): number[] => {
@@ -53,7 +45,7 @@ export function useSwipePreferences() {
 
   const clearPreferences = () => {
     setPreferences([]);
-    localStorage.removeItem(STORAGE_KEY);
+    // No localStorage
   };
 
   return {
