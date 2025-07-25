@@ -14,6 +14,7 @@ import { Link } from 'wouter';
 import { useCouples } from '@/contexts/CouplesContext';
 import Select from 'react-select';
 import { useRef } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
 function MatchPopup({ show, movie, onClose }: { show: boolean; movie: Movie | null; onClose: () => void }) {
   if (!show || !movie) return null;
@@ -35,7 +36,7 @@ export default function Swipe() {
   const [swipeCount, setSwipeCount] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { addPreference, getLikedGenres, hasPreferences } = useSwipePreferences();
-  const { currentRelationship, couplePreferences, addMatchedMovie } = useCouples();
+  const { currentRelationship, couplePreferences, addMatchedMovie, coupleId } = useCouples();
   const [showMatch, setShowMatch] = useState(false);
   const [matchedMovie, setMatchedMovie] = useState<Movie | null>(null);
   const [genreId, setGenreId] = useState<number | undefined>();
@@ -87,12 +88,27 @@ export default function Swipe() {
     });
 
     // --- Couple match logic ---
-    if (direction === 'right' && currentRelationship && couplePreferences) {
-      // For demo: assume partner's liked movies are in localStorage as 'partner_preferences'
-      const partnerPrefs = JSON.parse(localStorage.getItem('partner_preferences') || '[]');
-      const partnerLiked = partnerPrefs.filter((p: any) => p.preference === 'like').map((p: any) => p.movieId);
-      if (partnerLiked.includes(movie.id) && !couplePreferences.sharedMovies.includes(movie.id)) {
-        await addMatchedMovie(movie.id);
+    if (direction === 'right' && coupleId) {
+      // Upsert this user's swipe into couple_swipes
+      await supabase.from('couple_swipes').upsert({
+        couple_id: coupleId,
+        user_id: currentRelationship?.user1Id || currentRelationship?.user2Id, // fallback if needed
+        movie_id: movie.id,
+        liked: true,
+      });
+      // Check if both users have swiped right on this movie
+      const { data: swipes } = await supabase
+        .from('couple_swipes')
+        .select('user_id')
+        .eq('couple_id', coupleId)
+        .eq('movie_id', movie.id)
+        .eq('liked', true);
+      if (swipes && swipes.length === 2) {
+        // Upsert into matched_movies
+        await supabase.from('matched_movies').upsert({
+          couple_id: coupleId,
+          movie_id: movie.id,
+        });
         setMatchedMovie(movie);
         setShowMatch(true);
       }
