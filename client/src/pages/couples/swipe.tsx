@@ -130,7 +130,13 @@ export default function CouplesSwipe() {
       setShowMatch(true);
       refetchMatchedMovies(); // Ensure matched movies are refreshed
     }
-    setCurrentIndex(idx => idx + 1);
+    setCurrentIndex(idx => {
+      const newIndex = idx + 1;
+      console.log('Updated currentIndex:', newIndex);
+      console.log('filteredMovies after swipe:', filteredMovies);
+      console.log('currentMovie after swipe:', filteredMovies[newIndex]);
+      return newIndex;
+    });
     setSwiping(false);
     // Load more movies if running low
     if (currentIndex >= filteredMovies.length - 3) {
@@ -200,6 +206,9 @@ export default function CouplesSwipe() {
 
   // Progress bar
   const progress = Math.round(((currentIndex + 1) / filteredMovies.length) * 100);
+
+  // In the render, log currentIndex, filteredMovies, and currentMovie
+  console.log('Render: currentIndex', currentIndex, 'filteredMovies', filteredMovies, 'currentMovie', currentMovie);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-500/10 to-indigo-500/10 pt-20 pb-8">
