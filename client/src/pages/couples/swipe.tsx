@@ -63,6 +63,7 @@ export default function CouplesSwipe() {
   const [swipeHistory, setSwipeHistory] = useState<{ [movieId: number]: 'like' | 'dislike' }>({});
   // Add error state
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [forceRerender, setForceRerender] = useState(false);
 
   // Filters
   const { data: genres } = useQuery({
@@ -133,6 +134,7 @@ export default function CouplesSwipe() {
     setCurrentIndex(idx => {
       const newIndex = idx + 1;
       console.log('Updated currentIndex:', newIndex);
+      setForceRerender(f => !f); // Force a re-render
       console.log('filteredMovies after swipe:', filteredMovies);
       console.log('currentMovie after swipe:', filteredMovies[newIndex]);
       return newIndex;
@@ -208,7 +210,9 @@ export default function CouplesSwipe() {
   const progress = Math.round(((currentIndex + 1) / filteredMovies.length) * 100);
 
   // In the render, log currentIndex, filteredMovies, and currentMovie
-  console.log('Render: currentIndex', currentIndex, 'filteredMovies', filteredMovies, 'currentMovie', currentMovie);
+  useEffect(() => {
+    console.log('Render effect: currentIndex', currentIndex, 'filteredMovies', filteredMovies, 'currentMovie', currentMovie);
+  }, [currentIndex, filteredMovies, currentMovie, forceRerender]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-500/10 to-indigo-500/10 pt-20 pb-8">
@@ -234,7 +238,7 @@ export default function CouplesSwipe() {
               <AnimatePresence>
                 {currentMovie && (
                   <SwipeCard
-                    key={currentMovie.id}
+                    key={currentMovie.id + '-' + currentIndex + '-' + forceRerender}
                     movie={currentMovie}
                     onSwipe={handleSwipe}
                     isActive={!swiping}
