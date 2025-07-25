@@ -91,6 +91,9 @@ export default function Recommendations() {
     }
   }) : [];
 
+  // Deduplicate movies by id before rendering
+  const dedupedFilteredAndSortedMovies = filteredAndSortedMovies.filter((movie, index, self) => self.findIndex(m => m.id === movie.id) === index);
+
   useEffect(() => {
     const saved = localStorage.getItem('personalize_settings');
     if (saved) {
@@ -309,7 +312,7 @@ export default function Recommendations() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            {filteredAndSortedMovies.map((movie, index) => (
+            {dedupedFilteredAndSortedMovies.map((movie, index) => (
               <div key={movie.id} className="relative">
                 <MovieCard
                   movie={movie}
