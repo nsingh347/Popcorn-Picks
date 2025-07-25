@@ -101,6 +101,7 @@ export default function CouplesSwipe() {
 
   // Handle swipe
   const handleSwipe = async (direction: 'left' | 'right', movie: Movie) => {
+    console.log('Parent handleSwipe:', direction, movie);
     if (!user || !coupleId) return;
     setSwiping(true);
     // Store swipe in Supabase couple_swipes table
