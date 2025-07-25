@@ -159,6 +159,7 @@ export default function Couples() {
 
   // Fetch matched movies for the couple (hook at top level)
   const { data: matchedMovies = [], isLoading: loadingMatched } = useMatchedMovies(coupleId);
+  const coupleRecommendations = useCoupleRecommendations(coupleId);
 
   // Fetch usernames for all sender_ids in pendingRequests
   useEffect(() => {
@@ -232,42 +233,33 @@ export default function Couples() {
         </div>
 
         {/* Tabs for Couple Features */}
-        <Tabs defaultValue={currentRelationship ? "swipe" : "matched"} className="mb-12">
+        <Tabs defaultValue="matched" className="mb-12">
           <TabsList className="flex justify-center mb-8">
-            {currentRelationship && <TabsTrigger value="swipe">Swipe Together</TabsTrigger>}
             <TabsTrigger value="matched">Matched For You</TabsTrigger>
             <TabsTrigger value="recommendations">Couple Recommendations</TabsTrigger>
             <TabsTrigger value="watchlist">Joint Watchlist</TabsTrigger>
           </TabsList>
-          {currentRelationship && (
-            <TabsContent value="swipe">
-              <CouplesSwipe />
-            </TabsContent>
-          )}
           <TabsContent value="matched">
-            {/* Show matched movies for the couple */}
-            {currentRelationship ? (
-              loadingMatched ? (
-                <div className="text-center text-white">Loading matched movies...</div>
-              ) : !matchedMovies.length ? (
-                <div className="text-center text-white">No matched movies yet. Swipe right together to match!</div>
-              ) : (
-                <>
-                  <div className="text-center text-gray-400 mb-2">Debug: {JSON.stringify(matchedMovies.map(m => m.id))}</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {matchedMovies.map((movie: any) => (
-                      <MovieCard key={movie.id} movie={movie} />
-                    ))}
-                  </div>
-                </>
-              )
+            {!matchedMovies.length ? (
+              <div className="text-center text-white">No matched movies yet. Swipe right together to match!</div>
             ) : (
-              <div className="text-center text-white">Matched movies will appear here when both of you swipe right on the same movie!</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {matchedMovies.map((movie: any) => (
+                  <MovieCard key={movie.id} movie={movie} />
+                ))}
+              </div>
             )}
           </TabsContent>
           <TabsContent value="recommendations">
-            {/* TODO: Show couple recommendations */}
-            <div className="text-center text-white">Personalized movie recommendations for you and your partner.</div>
+            {!coupleRecommendations.length ? (
+              <div className="text-center text-white">No recommendations yet. Start swiping together to get personalized recommendations!</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {coupleRecommendations.map((movie: any) => (
+                  <MovieCard key={movie.id} movie={movie} />
+                ))}
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="watchlist">
             {currentRelationship ? (
