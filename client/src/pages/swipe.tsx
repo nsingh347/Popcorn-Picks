@@ -56,7 +56,7 @@ export default function Swipe() {
   });
 
   const allYears = Array.from({ length: 45 }, (_, i) => 2024 - i);
-  const genreOptions = genres?.genres.map((g: any) => ({ value: g.id, label: g.name })) || [];
+  const genreOptions = genres?.genres?.map((g: any) => ({ value: g.id, label: g.name })) || [];
   const yearOptions = allYears.map(y => ({ value: y, label: y.toString() }));
   const providerOptions = providers?.map((p: any) => ({ value: p.provider_id, label: p.provider_name })) || [];
 
@@ -98,118 +98,157 @@ export default function Swipe() {
         liked: true,
       });
       console.log('Upsert to couple_swipes result:', upsertResult);
+
       // Check if both users have swiped right on this movie
-      const { data: swipes, error: swipesError } = await supabase
+      const { data: swipes } = await supabase
         .from('couple_swipes')
         .select('user_id')
         .eq('couple_id', coupleId)
         .eq('movie_id', movie.id)
         .eq('liked', true);
-      console.log('Swipes for this movie:', swipes, 'Error:', swipesError);
+
       if (swipes && swipes.length === 2) {
-        // Upsert into matched_movies with conflict target
-        const upsertMatch = await supabase.from('matched_movies').upsert({
+        // Both users liked this movie - it's a match!
+        console.log('Match found! Both users liked:', movie.title);
+        const matchResult = await supabase.from('matched_movies').upsert({
           couple_id: coupleId,
           movie_id: movie.id,
         }, { onConflict: ['couple_id', 'movie_id'] });
-        console.log('Upsert to matched_movies result:', upsertMatch);
-        console.log('MATCH DETECTED for movie', movie.id);
+        console.log('Matched movie upsert result:', matchResult);
         setMatchedMovie(movie);
         setShowMatch(true);
       }
     }
 
-    setSwipeCount(prev => prev + 1);
+    // Move to next movie
     setCurrentIndex(prev => prev + 1);
-
-    // Load more movies if we're running low and haven't reached the limit
-    if (currentIndex >= currentMovies.length - 3 && swipeCount < 19) {
-      setIsLoadingMore(true);
-      try {
-        const newMovies = await tmdbService.getMoviesForSwipe(Math.floor(Math.random() * 5) + 1);
-        setCurrentMovies(prev => [...prev, ...newMovies]);
-      } catch (error) {
-        console.error('Error loading more movies:', error);
-      } finally {
-        setIsLoadingMore(false);
-      }
-    }
+    setSwipeCount(prev => prev + 1);
   };
 
   const resetSwipes = () => {
-    setCurrentIndex(0);
     setSwipeCount(0);
-    refetch();
+    setCurrentIndex(0);
   };
 
   const startNewBatch = () => {
-    setCurrentIndex(0);
     setSwipeCount(0);
-    // Fetch fresh movies for the new batch
+    setCurrentIndex(0);
     refetch();
   };
 
   const getCurrentMovie = () => currentMovies[currentIndex];
   const getUpcomingMovies = () => currentMovies.slice(currentIndex + 1, currentIndex + 4);
-  const progress = Math.min((swipeCount / 20) * 100, 100);
 
-  // Show error if API fails
+  const progress = (swipeCount / 20) * 100;
+  const likedGenres = getLikedGenres();
+
+  const customStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      backgroundColor: '#23272a',
+      borderColor: '#444',
+      minHeight: '40px',
+      boxShadow: 'none',
+      '&:hover': {
+        borderColor: '#666'
+      }
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: '#23272a',
+      border: '1px solid #444',
+      zIndex: 9999
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#FFD700' : state.isFocused ? '#444' : '#23272a',
+      color: state.isSelected ? '#23272a' : '#fff',
+      fontWeight: state.isSelected ? 700 : 500,
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#FFD700' : '#444'
+      }
+    }),
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: '#fff',
+      fontWeight: 600
+    }),
+    input: (provided: any) => ({
+      ...provided,
+      color: '#fff',
+      fontWeight: 600
+    }),
+    placeholder: (provided: any) => ({
+      ...provided,
+      color: '#bbb',
+      fontWeight: 500
+    }),
+    indicatorSeparator: (provided: any) => ({
+      ...provided,
+      backgroundColor: '#444'
+    }),
+    dropdownIndicator: (provided: any) => ({
+      ...provided,
+      color: '#bbb',
+      '&:hover': {
+        color: '#fff'
+      }
+    }),
+    clearIndicator: (provided: any) => ({
+      ...provided,
+      color: '#bbb',
+      '&:hover': {
+        color: '#fff'
+      }
+    })
+  };
+
   if (error) {
-    return (
-      <ApiError 
-        message="Unable to load movies. Please check your API configuration."
-        onRetry={() => refetch()}
-      />
-    );
+    return <ApiError error={error} onRetry={refetch} />;
   }
 
-  // Show loading state
-  if (isLoading || !moviesData || currentMovies.length === 0) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-deep-black flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-netflix border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-xl">Loading movies...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-netflix mx-auto mb-4"></div>
+          <p className="text-white">Loading movies...</p>
         </div>
       </div>
     );
   }
 
-  const currentMovie = getCurrentMovie();
-  const upcomingMovies = getUpcomingMovies();
+  if (!getCurrentMovie()) {
+    return (
+      <div className="min-h-screen bg-deep-black flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">No more movies!</h2>
+          <p className="text-gray-400 mb-6">You've swiped through all available movies.</p>
+          <Button onClick={startNewBatch} className="bg-netflix text-white">
+            Start New Batch
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-deep-black pt-20 pb-8">
-      <div className="container mx-auto px-2 sm:px-6">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Filters */}
-        <div className="flex flex-nowrap gap-4 sm:gap-8 justify-center mb-4 sm:mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
+        <div className="flex flex-nowrap gap-4 sm:gap-8 justify-center mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
           {/* Genre Filter */}
           <div className="flex flex-col items-start min-w-[140px] sm:min-w-[200px]">
             <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Genre</label>
             <Select
               options={[{ value: '', label: 'All Genres' }, ...genreOptions]}
-              value={genreOptions.find(o => o.value === genreId) || { value: '', label: 'All Genres' }}
-              onChange={opt => setGenreId(opt?.value ? Number(opt.value) : undefined)}
+              value={genreId ? genreOptions.find(o => o.value === genreId) : { value: '', label: 'All Genres' }}
+              onChange={(option) => setGenreId(option?.value ? Number(option.value) : undefined)}
               isClearable
               placeholder="All Genres"
+              styles={customStyles}
+              className="w-full"
               classNamePrefix="react-select"
-              styles={{
-                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white', minHeight: 36 }),
-                menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
-                singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                placeholder: (base) => ({ ...base, color: '#bbb', fontWeight: 500 }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.isSelected
-                    ? '#FFD700'
-                    : state.isFocused
-                    ? '#444'
-                    : '#23272a',
-                  color: state.isSelected ? '#23272a' : '#fff',
-                  fontWeight: state.isSelected ? 700 : 500,
-                }),
-              }}
             />
           </div>
           {/* Year Filter */}
@@ -217,28 +256,13 @@ export default function Swipe() {
             <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Release Year</label>
             <Select
               options={[{ value: '', label: 'All Years' }, ...yearOptions]}
-              value={yearOptions.find(o => o.value === year) || { value: '', label: 'All Years' }}
-              onChange={opt => setYear(opt?.value ? Number(opt.value) : undefined)}
+              value={year ? yearOptions.find(o => o.value === year) : { value: '', label: 'All Years' }}
+              onChange={(option) => setYear(option?.value ? Number(option.value) : undefined)}
               isClearable
               placeholder="All Years"
+              styles={customStyles}
+              className="w-full"
               classNamePrefix="react-select"
-              styles={{
-                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white', minHeight: 36 }),
-                menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
-                singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                placeholder: (base) => ({ ...base, color: '#bbb', fontWeight: 500 }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.isSelected
-                    ? '#FFD700'
-                    : state.isFocused
-                    ? '#444'
-                    : '#23272a',
-                  color: state.isSelected ? '#23272a' : '#fff',
-                  fontWeight: state.isSelected ? 700 : 500,
-                }),
-              }}
             />
           </div>
           {/* Provider Filter */}
@@ -246,28 +270,13 @@ export default function Swipe() {
             <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Platform</label>
             <Select
               options={[{ value: '', label: 'All Platforms' }, ...providerOptions]}
-              value={providerOptions.find(o => o.value === providerId) || { value: '', label: 'All Platforms' }}
-              onChange={opt => setProviderId(opt?.value ? Number(opt.value) : undefined)}
+              value={providerId ? providerOptions.find(o => o.value === providerId) : { value: '', label: 'All Platforms' }}
+              onChange={(option) => setProviderId(option?.value ? Number(option.value) : undefined)}
               isClearable
               placeholder="All Platforms"
+              styles={customStyles}
+              className="w-full"
               classNamePrefix="react-select"
-              styles={{
-                control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white', minHeight: 36 }),
-                menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
-                singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                placeholder: (base) => ({ ...base, color: '#bbb', fontWeight: 500 }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.isSelected
-                    ? '#FFD700'
-                    : state.isFocused
-                    ? '#444'
-                    : '#23272a',
-                  color: state.isSelected ? '#23272a' : '#fff',
-                  fontWeight: state.isSelected ? 700 : 500,
-                }),
-              }}
             />
           </div>
         </div>
@@ -301,177 +310,84 @@ export default function Swipe() {
               <div className="text-xs sm:text-sm text-gray-400">Movies Swiped</div>
             </div>
             <div className="text-center">
-              <div className="text-lg sm:text-2xl font-bold text-green-400">{getLikedGenres().length}</div>
+              <div className="text-lg sm:text-2xl font-bold text-green-500">{likedGenres.length}</div>
               <div className="text-xs sm:text-sm text-gray-400">Liked Genres</div>
             </div>
           </div>
         </div>
 
-        {/* Swipe Area */}
-        <div className="max-w-md mx-auto relative">
-          <div className="relative h-80 sm:h-96 mb-12 sm:mb-20">
-            <AnimatePresence>
-              {/* Current Movie Card */}
-              {currentMovie && swipeCount < 20 && (
-                <SwipeCard
-                  key={currentMovie.id}
-                  movie={currentMovie}
-                  onSwipe={handleSwipe}
-                  isActive={true}
-                  swipeCount={swipeCount}
-                />
-              )}
-              
-              {/* Upcoming Cards */}
-              {swipeCount < 20 && upcomingMovies.map((movie, index) => (
-                <SwipeCard
-                  key={movie.id}
-                  movie={movie}
-                  onSwipe={handleSwipe}
-                  isActive={false}
-                  index={index + 1}
-                  swipeCount={swipeCount}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-
-          {/* Instructions */}
-          <div className="text-center mb-4 sm:mb-8">
-            <p className="text-gray-400 mb-2 text-sm sm:text-base">Swipe or use buttons below</p>
-            <div className="flex justify-center space-x-1 sm:space-x-2">
-              {Array.from({ length: Math.min(currentMovies.length - currentIndex, 3) }).map((_, i) => (
+        {/* Main Swipe Area */}
+        <div className="flex justify-center">
+          <div className="relative">
+            {/* Current Movie */}
+            <SwipeCard
+              movie={getCurrentMovie()}
+              onSwipe={handleSwipe}
+              isActive={true}
+            />
+            
+            {/* Upcoming Movies (Background) */}
+            <div className="absolute inset-0 -z-10">
+              {getUpcomingMovies().map((movie, index) => (
                 <div
-                  key={i}
-                  className={`w-2 h-2 rounded-full ${
-                    i === 0 ? 'bg-netflix' : 'bg-gray-600'
-                  }`}
-                />
+                  key={movie.id}
+                  className="absolute inset-0"
+                  style={{
+                    transform: `scale(${0.9 - index * 0.05}) translateY(${index * 10}px)`,
+                    zIndex: -index - 1,
+                  }}
+                >
+                  <SwipeCard
+                    movie={movie}
+                    onSwipe={() => {}}
+                    isActive={false}
+                  />
+                </div>
               ))}
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-center items-center sm:space-x-6 space-y-2 sm:space-y-0 mb-6 sm:mb-8">
+        <div className="flex justify-center space-x-4 mt-8">
           <Button
-            variant="outline"
-            size="lg"
-            onClick={resetSwipes}
-            className="border-gray-600 text-gray-300 hover:bg-gray-800 w-full sm:w-auto"
+            onClick={() => handleSwipe('left', getCurrentMovie())}
+            className="bg-red-500 hover:bg-red-600 text-white p-4 rounded-full"
+            disabled={swipeCount >= 20}
           >
-            <RotateCcw className="w-5 h-5 mr-2" />
-            Reset
+            ✕
           </Button>
-          
-          {hasPreferences && (
-            <Link href="/recommendations" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="bg-accent-gold hover:bg-yellow-500 text-black font-semibold w-full sm:w-auto"
-              >
-                <TrendingUp className="w-5 h-5 mr-2" />
-                Get Recommendations
-              </Button>
-            </Link>
-          )}
+          <Button
+            onClick={() => handleSwipe('right', getCurrentMovie())}
+            className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full"
+            disabled={swipeCount >= 20}
+          >
+            ♥
+          </Button>
         </div>
 
-        {/* Liked Genres */}
-        {getLikedGenres().length > 0 && (
-          <motion.div
-            className="max-w-2xl mx-auto text-center"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+        {/* Reset Button */}
+        <div className="text-center mt-6">
+          <Button
+            onClick={resetSwipes}
+            variant="outline"
+            className="text-gray-400 border-gray-600 hover:bg-gray-800"
           >
-            <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4 flex items-center justify-center">
-              <Star className="w-4 h-4 mr-2 text-accent-gold" />
-              Your Preferences
-            </h3>
-            <p className="text-gray-400 mb-2 sm:mb-4 text-sm sm:text-base">
-              Based on your swipes, you seem to enjoy these genres:
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {getLikedGenres().slice(0, 5).map(genreId => (
-                <Badge
-                  key={genreId}
-                  variant="secondary"
-                  className="bg-netflix/20 text-netflix border-netflix/30"
-                >
-                  Genre {genreId}
-                </Badge>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Completed 20 swipes */}
-        {swipeCount >= 20 && (
-          <div className="text-center">
-            <div className="text-6xl mb-4">🎉</div>
-            <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">Great job! You've completed 20 swipes!</h3>
-            <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">
-              You've discovered your preferences by swiping through 20 movies.
-              {hasPreferences ? ' Your liked movies have been added to recommendations!' : ' Start again to discover more.'}
-            </p>
-            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-4">
-              <Button onClick={startNewBatch} className="bg-netflix hover:bg-red-700 text-white w-full sm:w-auto">
-                <Play className="w-4 h-4 mr-2" />
-                Swipe More
-              </Button>
-              {hasPreferences && (
-                <Link href="/recommendations" className="w-full sm:w-auto">
-                  <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 w-full sm:w-auto">
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    View Recommendations
-                  </Button>
-                </Link>
-              )}
-              <Button onClick={resetSwipes} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 w-full sm:w-auto">
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Start Over
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* No more movies */}
-        {currentIndex >= currentMovies.length && !isLoadingMore && swipeCount < 20 && (
-          <div className="text-center">
-            <div className="text-6xl mb-4">🎬</div>
-            <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">That's all for now!</h3>
-            <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">
-              You've swiped through all available movies. 
-              {hasPreferences ? ' Check out your personalized recommendations!' : ' Start again to discover more.'}
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
-              <Button onClick={resetSwipes} variant="outline" className="w-full sm:w-auto">
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Start Over
-              </Button>
-              {hasPreferences && (
-                <Link href="/recommendations" className="w-full sm:w-auto">
-                  <Button className="bg-netflix hover:bg-red-700 w-full sm:w-auto">
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    View Recommendations
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Loading indicator */}
-        {isLoadingMore && (
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-netflix border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            <p className="text-gray-400">Loading more movies...</p>
-          </div>
-        )}
-
-        <MatchPopup show={showMatch} movie={matchedMovie} onClose={() => setShowMatch(false)} />
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Reset Progress
+          </Button>
+        </div>
       </div>
+
+      {/* Match Popup */}
+      <MatchPopup
+        show={showMatch}
+        movie={matchedMovie}
+        onClose={() => {
+          setShowMatch(false);
+          setMatchedMovie(null);
+        }}
+      />
     </div>
   );
 }

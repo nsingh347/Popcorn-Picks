@@ -16,26 +16,43 @@ export default function Discover() {
 
   const { data: searchResults, isLoading: isSearching } = useQuery({
     queryKey: ['search-movies', search],
-    queryFn: () => search ? tmdbService.searchMovies(search) : Promise.resolve([]),
+    queryFn: async () => {
+      if (!search) return [];
+      const response = await tmdbService.searchMovies(search);
+      return response.results || [];
+    },
     enabled: !!search,
   });
+  
   const { data: latest } = useQuery({
     queryKey: ['latest-movies'],
-    queryFn: () => tmdbService.getLatestMovies(),
+    queryFn: async () => {
+      const response = await tmdbService.getLatestMovies();
+      return response.results || [];
+    },
   });
+  
   const { data: trending } = useQuery({
     queryKey: ['trending-movies'],
-    queryFn: () => tmdbService.getTrendingMovies(),
+    queryFn: async () => {
+      const response = await tmdbService.getTrendingMovies();
+      return response.results || [];
+    },
   });
+  
   const { data: critics } = useQuery({
     queryKey: ['critics-favorite'],
-    queryFn: () => tmdbService.getCriticsFavorite(),
+    queryFn: async () => {
+      const response = await tmdbService.getCriticsFavorite();
+      return response.results || [];
+    },
   });
 
   const { data: genres } = useQuery({
     queryKey: ['genres'],
     queryFn: () => tmdbService.getGenres(),
   });
+  
   const { data: providers } = useQuery({
     queryKey: ['providers'],
     queryFn: () => tmdbService.getWatchProvidersList(),
