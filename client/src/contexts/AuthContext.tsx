@@ -65,12 +65,16 @@ function mapSupabaseUser(user: any): User {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Check for existing session on mount
+  // Check for existing session on mount and listen for auth changes
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // No localStorage: rely only on Supabase session
-        // Remove all getItem/setItem for auth_token/user_data
+        // Get initial session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const mappedUser = mapSupabaseUser(session.user);
+          dispatch({ type: 'SET_USER', payload: mappedUser });
+        }
       } catch (error) {
         console.error('Auth check failed:', error);
       } finally {
@@ -79,6 +83,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          const mappedUser = mapSupabaseUser(session.user);
+          dispatch({ type: 'SET_USER', payload: mappedUser });
+        } else if (event === 'SIGNED_OUT') {
+          dispatch({ type: 'LOGOUT' });
+        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          const mappedUser = mapSupabaseUser(session.user);
+          dispatch({ type: 'SET_USER', payload: mappedUser });
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
@@ -94,7 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const user = data.user;
       if (!user) throw new Error('No user returned');
       const mappedUser = mapSupabaseUser(user);
-      // No localStorage
       dispatch({ type: 'SET_USER', payload: mappedUser });
     } catch (error: any) {
       dispatch({ type: 'SET_ERROR', payload: error.message || 'Login failed' });
@@ -170,7 +192,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const user = signUpData.user;
       if (!user) throw new Error('No user returned');
       const mappedUser = mapSupabaseUser(user);
-      // No localStorage
       dispatch({ type: 'SET_USER', payload: mappedUser });
     } catch (error: any) {
       if (error.message && error.message.includes('duplicate key value')) {
@@ -183,13 +204,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    // No localStorage
-    dispatch({ type: 'LOGOUT' });
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      dispatch({ type: 'LOGOUT' });
+    } catch (error) {
+      console.error('Logout error:', error);
+      dispatch({ type: 'LOGOUT' });
+    }
   };
 
   const updateUser = (user: User) => {
-    // No localStorage
     dispatch({ type: 'SET_USER', payload: user });
   };
 

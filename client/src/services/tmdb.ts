@@ -338,32 +338,16 @@ class TMDBService {
     }));
   }
 
-  async searchMovies(query: string) {
-    const url = `${TMDB_BASE_URL}/search/movie?api_key=${this.apiKey}&query=${encodeURIComponent(query)}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    return data.results || [];
-  }
-
   async getLatestMovies() {
-    const url = `${TMDB_BASE_URL}/movie/now_playing?api_key=${this.apiKey}&language=en-US&page=1`;
-    const res = await fetch(url);
-    const data = await res.json();
-    return data.results || [];
+    return this.fetchFromTMDB('/movie/now_playing?language=en-US&page=1');
   }
 
   async getTrendingMovies() {
-    const url = `${TMDB_BASE_URL}/trending/movie/week?api_key=${this.apiKey}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    return data.results || [];
+    return this.fetchFromTMDB('/trending/movie/week');
   }
 
   async getCriticsFavorite() {
-    const url = `${TMDB_BASE_URL}/movie/top_rated?api_key=${this.apiKey}&language=en-US&page=1`;
-    const res = await fetch(url);
-    const data = await res.json();
-    return data.results || [];
+    return this.fetchFromTMDB('/movie/top_rated?language=en-US&page=1');
   }
 }
 
