@@ -19,6 +19,49 @@ import Personalize from '@/pages/personalize';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Redirect } from 'wouter';
 import Discover from './pages/discover';
+import React from 'react';
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-deep-black flex items-center justify-center text-white">
+          <div className="text-center max-w-md mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
+            <p className="text-gray-400 mb-6">
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-netflix text-white px-4 py-2 rounded-lg"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType<any> }) {
   const { isAuthenticated } = useAuth();
@@ -48,18 +91,20 @@ function Router() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-      <TooltipProvider>
-          <AuthProvider>
-            <CouplesProvider>
-          <Navigation />
-          <Router />
-          <Toaster />
-            </CouplesProvider>
-          </AuthProvider>
-      </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+        <TooltipProvider>
+            <AuthProvider>
+              <CouplesProvider>
+            <Navigation />
+            <Router />
+            <Toaster />
+              </CouplesProvider>
+            </AuthProvider>
+        </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

@@ -126,11 +126,13 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from('relationship_requests')
         .select('*')
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .eq('status', 'pending');
       if (error) throw error;
       // Map to Relationship type if needed
       dispatch({ type: 'SET_PENDING_REQUESTS', payload: data || [] });
     } catch (error) {
+      console.error('Error fetching pending requests:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch requests' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -148,7 +150,7 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .eq('status', 'accepted')
-        .single();
+        .maybeSingle();
       if (error && error.code !== 'PGRST116') throw error; // PGRST116: No rows found
       if (data) {
         dispatch({ type: 'SET_RELATIONSHIP', payload: data });
@@ -157,6 +159,7 @@ export function CouplesProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_RELATIONSHIP', payload: null });
       }
     } catch (error) {
+      console.error('Error loading couple data:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load couple data' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
