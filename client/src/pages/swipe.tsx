@@ -73,9 +73,19 @@ export default function Swipe() {
     queryKey: ['swipe-movies', genreId, year, providerId],
     queryFn: async () => {
       const randomPage = Math.floor(Math.random() * 10) + 1; // Random page 1-10
+      console.log('Fetching movies with:', { randomPage, genreId, year, providerId });
+      
+      // Check if API key is available
+      if (!import.meta.env.VITE_TMDB_API_KEY) {
+        console.error('TMDB API key is missing! Please add VITE_TMDB_API_KEY to your .env file');
+        throw new Error('TMDB API key is not configured. Please check your environment variables.');
+      }
+      
       const response = await tmdbService.getMoviesForSwipe(randomPage, { genreId, year, providerId });
+      console.log('TMDB response:', response?.length, 'movies');
       return response || [];
     },
+    enabled: true, // Always enable the query
   });
 
   useEffect(() => {
@@ -247,6 +257,23 @@ export default function Swipe() {
   };
 
   if (error) {
+    // Check if it's a missing API key error
+    if (error.message?.includes('TMDB API key')) {
+      return (
+        <div className="min-h-screen bg-deep-black flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto px-4">
+            <h2 className="text-2xl font-bold text-white mb-4">Configuration Error</h2>
+            <p className="text-gray-400 mb-6">
+              The TMDB API key is missing. Please add VITE_TMDB_API_KEY to your environment variables.
+            </p>
+            <div className="bg-gray-800 p-4 rounded-lg text-left">
+              <p className="text-sm text-gray-300 mb-2">Add this to your .env file:</p>
+              <code className="text-xs text-green-400">VITE_TMDB_API_KEY=your_api_key_here</code>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return <ApiError error={error} onRetry={refetch} />;
   }
 

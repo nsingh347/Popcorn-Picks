@@ -108,7 +108,10 @@ class TMDBService {
       if (filters.genreId) endpoint += `&with_genres=${filters.genreId}`;
       if (filters.year) endpoint += `&primary_release_year=${filters.year}`;
       if (filters.providerId) endpoint += `&with_watch_providers=${filters.providerId}&watch_region=US`;
+      
+      console.log('TMDB getMoviesForSwipe endpoint:', endpoint);
       const data = await this.fetchFromTMDB(endpoint);
+      console.log('TMDB getMoviesForSwipe response:', data?.results?.length, 'movies');
       return data.results || [];
     } catch (error) {
       console.error('Error fetching movies for swipe:', error);
