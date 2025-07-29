@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import React from "react";
+import "./index.css";
 
 // Simple test component to isolate the issue
 function TestApp() {
