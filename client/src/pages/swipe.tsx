@@ -58,6 +58,16 @@ export default function Swipe() {
   const yearOptions = allYears.map(y => ({ value: y, label: y.toString() }));
   const providerOptions = providers?.map((p: any) => ({ value: p.provider_id, label: p.provider_name })) || [];
 
+  // Debug logging
+  console.log('Swipe page data:', {
+    genres: genres?.genres?.length,
+    providers: providers?.length,
+    genreOptions: genreOptions.length,
+    yearOptions: yearOptions.length,
+    providerOptions: providerOptions.length,
+    moviesData: moviesData?.length
+  });
+
   // Load movies with random page and filters
   const { data: moviesData, refetch, error, isLoading } = useQuery({
     queryKey: ['swipe-movies', genreId, year, providerId],
@@ -269,7 +279,7 @@ export default function Swipe() {
     <div className="min-h-screen bg-deep-black pt-20 pb-8">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Filters */}
-        <div className="flex flex-nowrap gap-4 sm:gap-8 justify-center mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
+        <div className="flex flex-nowrap gap-4 sm:gap-8 justify-center mb-8 overflow-visible whitespace-nowrap">
           {/* Genre Filter */}
           <div className="flex flex-col items-start min-w-[140px] sm:min-w-[200px]">
             <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Genre</label>

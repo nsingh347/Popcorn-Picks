@@ -52,7 +52,6 @@ export default function Discover() {
     queryKey: ['genres'],
     queryFn: () => tmdbService.getGenres(),
   });
-  
   const { data: providers } = useQuery({
     queryKey: ['providers'],
     queryFn: () => tmdbService.getWatchProvidersList(),
@@ -62,6 +61,15 @@ export default function Discover() {
   const genreOptions = genres?.genres?.map((g: any) => ({ value: g.id, label: g.name })) || [];
   const yearOptions = allYears.map(y => ({ value: y, label: y.toString() }));
   const providerOptions = providers?.map((p: any) => ({ value: p.provider_id, label: p.provider_name })) || [];
+
+  // Debug logging
+  console.log('Discover page data:', {
+    genres: genres?.genres?.length,
+    providers: providers?.length,
+    genreOptions: genreOptions.length,
+    yearOptions: yearOptions.length,
+    providerOptions: providerOptions.length
+  });
 
   // Filtering logic for movies
   const filterMovies = (movies: any[]) => {
@@ -143,7 +151,7 @@ export default function Discover() {
         </motion.h1>
         {/* Filters */}
         {!search && (
-          <div className="flex flex-nowrap gap-4 sm:gap-8 justify-center mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
+          <div className="flex flex-nowrap gap-4 sm:gap-8 justify-center mb-8 overflow-visible whitespace-nowrap">
             {/* Genre Filter */}
             <div className="flex flex-col items-start min-w-[140px] sm:min-w-[200px]">
               <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Genre</label>
