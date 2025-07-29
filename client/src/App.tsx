@@ -23,10 +23,10 @@ import React from 'react';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
+  { children: React.ReactNode; fallback?: React.ReactNode },
   { hasError: boolean; error?: Error }
 > {
-  constructor(props: { children: React.ReactNode }) {
+  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -41,12 +41,15 @@ class ErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
       return (
         <div className="min-h-screen bg-deep-black flex items-center justify-center text-white">
           <div className="text-center max-w-md mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
+            <h2 className="text-2xl font-bold mb-4">Component Error</h2>
             <p className="text-gray-400 mb-6">
-              {this.state.error?.message || 'An unexpected error occurred'}
+              {this.state.error?.message || 'An error occurred in this component'}
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -73,19 +76,21 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/discover" component={Discover} />
-      <Route path="/swipe" component={() => <ProtectedRoute component={Swipe} />} />
-      <Route path="/recommendations" component={() => <ProtectedRoute component={Recommendations} />} />
-      <Route path="/watchlist" component={() => <ProtectedRoute component={Watchlist} />} />
-      <Route path="/couples" component={Couples} />
-      <Route path="/couples/recommendations" component={CoupleRecommendations} />
-      <Route path="/auth/login" component={Login} />
-      <Route path="/auth/register" component={Register} />
-      <Route path="/personalize" component={Personalize} />
-      <Route component={NotFound} />
-    </Switch>
+    <ErrorBoundary>
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route path="/discover" component={Discover} />
+        <Route path="/swipe" component={() => <ProtectedRoute component={Swipe} />} />
+        <Route path="/recommendations" component={() => <ProtectedRoute component={Recommendations} />} />
+        <Route path="/watchlist" component={() => <ProtectedRoute component={Watchlist} />} />
+        <Route path="/couples" component={Couples} />
+        <Route path="/couples/recommendations" component={CoupleRecommendations} />
+        <Route path="/auth/login" component={Login} />
+        <Route path="/auth/register" component={Register} />
+        <Route path="/personalize" component={Personalize} />
+        <Route component={NotFound} />
+      </Switch>
+    </ErrorBoundary>
   );
 }
 
@@ -93,17 +98,31 @@ export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-        <TooltipProvider>
-            <AuthProvider>
-              <CouplesProvider>
-            <Navigation />
-            <Router />
-            <Toaster />
-              </CouplesProvider>
-            </AuthProvider>
-        </TooltipProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <ErrorBoundary>
+              <TooltipProvider>
+                <ErrorBoundary>
+                  <AuthProvider>
+                    <ErrorBoundary>
+                      <CouplesProvider>
+                        <ErrorBoundary>
+                          <Navigation />
+                        </ErrorBoundary>
+                        <ErrorBoundary>
+                          <Router />
+                        </ErrorBoundary>
+                        <ErrorBoundary>
+                          <Toaster />
+                        </ErrorBoundary>
+                      </CouplesProvider>
+                    </ErrorBoundary>
+                  </AuthProvider>
+                </ErrorBoundary>
+              </TooltipProvider>
+            </ErrorBoundary>
+          </ThemeProvider>
+        </ErrorBoundary>
       </QueryClientProvider>
     </ErrorBoundary>
   );

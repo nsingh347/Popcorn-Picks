@@ -1,26 +1,7 @@
 import { createRoot } from "react-dom/client";
 import React from "react";
 import "./index.css";
-
-// Simple test component to isolate the issue
-function TestApp() {
-  return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh', 
-      background: '#000', 
-      color: 'white',
-      fontFamily: 'Arial, sans-serif'
-    }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1>Popcorn Picks</h1>
-        <p>App is loading...</p>
-      </div>
-    </div>
-  );
-}
+import App from "./App";
 
 // Add error handling for initialization
 window.addEventListener('error', (event) => {
@@ -43,8 +24,8 @@ try {
   console.log('Root element found, creating React root...');
   const root = createRoot(rootElement);
   
-  console.log('Rendering test app...');
-  root.render(<TestApp />);
+  console.log('Rendering main app...');
+  root.render(<App />);
   
   console.log('App rendered successfully');
 } catch (error) {
