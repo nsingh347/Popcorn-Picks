@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import React from "react";
-import "./index.css";
+// import "./index.css"; // Temporarily commented out to isolate the issue
 import App from "./App";
 
 // Add error handling for initialization
