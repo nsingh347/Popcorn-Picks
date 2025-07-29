@@ -119,15 +119,84 @@
   .bg-accent-gold {
     background-color: var(--accent-gold);
   }
+  
+  /* React Select Styles */
+  .react-select__control {
+    background-color: #23272a !important;
+    border-color: #444 !important;
+    min-height: 40px !important;
+    box-shadow: none !important;
+  }
+  
+  .react-select__control:hover {
+    border-color: #666 !important;
+  }
+  
+  .react-select__menu {
+    background-color: #23272a !important;
+    border: 1px solid #444 !important;
+    z-index: 9999 !important;
+  }
+  
+  .react-select__option {
+    background-color: #23272a !important;
+    color: #fff !important;
+    font-weight: 500 !important;
+  }
+  
+  .react-select__option--is-focused {
+    background-color: #444 !important;
+  }
+  
+  .react-select__option--is-selected {
+    background-color: #FFD700 !important;
+    color: #23272a !important;
+    font-weight: 700 !important;
+  }
+  
+  .react-select__single-value {
+    color: #fff !important;
+    font-weight: 600 !important;
+  }
+  
+  .react-select__input {
+    color: #fff !important;
+    font-weight: 600 !important;
+  }
+  
+  .react-select__placeholder {
+    color: #bbb !important;
+    font-weight: 500 !important;
+  }
+  
+  .react-select__indicator-separator {
+    background-color: #444 !important;
+  }
+  
+  .react-select__dropdown-indicator {
+    color: #bbb !important;
+  }
+  
+  .react-select__dropdown-indicator:hover {
+    color: #fff !important;
+  }
+  
+  .react-select__clear-indicator {
+    color: #bbb !important;
+  }
+  
+  .react-select__clear-indicator:hover {
+    color: #fff !important;
+  }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  50% { transform: translateY(-10px); }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(50px); opacity: 0; }
+  from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
@@ -137,25 +206,25 @@
 }
 
 @keyframes swipeLeft {
-  from { transform: translateX(0) rotate(0deg); opacity: 1; }
-  to { transform: translateX(-100px) rotate(-10deg); opacity: 0; }
+  from { transform: translateX(0) rotate(0deg); }
+  to { transform: translateX(-200px) rotate(-20deg); }
 }
 
 @keyframes swipeRight {
-  from { transform: translateX(0) rotate(0deg); opacity: 1; }
-  to { transform: translateX(100px) rotate(10deg); opacity: 0; }
+  from { transform: translateX(0) rotate(0deg); }
+  to { transform: translateX(200px) rotate(20deg); }
 }
 
 .animate-float {
-  animation: float 6s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite;
 }
 
 .animate-slide-up {
-  animation: slideUp 0.8s ease-out;
+  animation: slideUp 0.6s ease-out;
 }
 
 .animate-fade-in {
-  animation: fadeIn 1s ease-out;
+  animation: fadeIn 0.5s ease-out;
 }
 
 .animate-swipe-left {

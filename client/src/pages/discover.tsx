@@ -40,19 +40,82 @@ export default function Discover() {
     queryKey: ['providers'],
     queryFn: () => tmdbService.getWatchProvidersList(),
   });
+  
   const allYears = Array.from({ length: 45 }, (_, i) => 2024 - i);
-  const genreOptions = genres?.genres.map((g: any) => ({ value: g.id, label: g.name })) || [];
+  const genreOptions = genres?.genres?.map((g: any) => ({ value: g.id, label: g.name })) || [];
   const yearOptions = allYears.map(y => ({ value: y, label: y.toString() }));
   const providerOptions = providers?.map((p: any) => ({ value: p.provider_id, label: p.provider_name })) || [];
 
   // Filtering logic for movies
   const filterMovies = (movies: any[]) => {
+    if (!movies) return [];
     return movies.filter((movie: any) => {
       if (genreId && !(movie.genre_ids || movie.genres?.map((g: any) => g.id)).includes(genreId)) return false;
       if (year && (!movie.release_date || !movie.release_date.startsWith(year.toString()))) return false;
       // No provider filter for now (TMDB API does not provide provider info in movie list)
       return true;
     });
+  };
+
+  const customStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      backgroundColor: '#23272a',
+      borderColor: '#444',
+      minHeight: '40px',
+      boxShadow: 'none',
+      '&:hover': {
+        borderColor: '#666'
+      }
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: '#23272a',
+      border: '1px solid #444',
+      zIndex: 9999
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#FFD700' : state.isFocused ? '#444' : '#23272a',
+      color: state.isSelected ? '#23272a' : '#fff',
+      fontWeight: state.isSelected ? 700 : 500,
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#FFD700' : '#444'
+      }
+    }),
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: '#fff',
+      fontWeight: 600
+    }),
+    input: (provided: any) => ({
+      ...provided,
+      color: '#fff',
+      fontWeight: 600
+    }),
+    placeholder: (provided: any) => ({
+      ...provided,
+      color: '#bbb',
+      fontWeight: 500
+    }),
+    indicatorSeparator: (provided: any) => ({
+      ...provided,
+      backgroundColor: '#444'
+    }),
+    dropdownIndicator: (provided: any) => ({
+      ...provided,
+      color: '#bbb',
+      '&:hover': {
+        color: '#fff'
+      }
+    }),
+    clearIndicator: (provided: any) => ({
+      ...provided,
+      color: '#bbb',
+      '&:hover': {
+        color: '#fff'
+      }
+    })
   };
 
   return (
@@ -69,28 +132,13 @@ export default function Discover() {
               <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Genre</label>
               <Select
                 options={[{ value: '', label: 'All Genres' }, ...genreOptions]}
-                value={genreOptions.find(o => o.value === genreId) || { value: '', label: 'All Genres' }}
-                onChange={opt => setGenreId(opt?.value ? Number(opt.value) : undefined)}
+                value={genreId ? genreOptions.find(o => o.value === genreId) : { value: '', label: 'All Genres' }}
+                onChange={(option) => setGenreId(option?.value ? Number(option.value) : undefined)}
                 isClearable
                 placeholder="All Genres"
+                styles={customStyles}
+                className="w-full"
                 classNamePrefix="react-select"
-                styles={{
-                  control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white', minHeight: 36 }),
-                  menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
-                  singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                  input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                  placeholder: (base) => ({ ...base, color: '#bbb', fontWeight: 500 }),
-                  option: (base, state) => ({
-                    ...base,
-                    backgroundColor: state.isSelected
-                      ? '#FFD700'
-                      : state.isFocused
-                      ? '#444'
-                      : '#23272a',
-                    color: state.isSelected ? '#23272a' : '#fff',
-                    fontWeight: state.isSelected ? 700 : 500,
-                  }),
-                }}
               />
             </div>
             {/* Year Filter */}
@@ -98,28 +146,13 @@ export default function Discover() {
               <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Release Year</label>
               <Select
                 options={[{ value: '', label: 'All Years' }, ...yearOptions]}
-                value={yearOptions.find(o => o.value === year) || { value: '', label: 'All Years' }}
-                onChange={opt => setYear(opt?.value ? Number(opt.value) : undefined)}
+                value={year ? yearOptions.find(o => o.value === year) : { value: '', label: 'All Years' }}
+                onChange={(option) => setYear(option?.value ? Number(option.value) : undefined)}
                 isClearable
                 placeholder="All Years"
+                styles={customStyles}
+                className="w-full"
                 classNamePrefix="react-select"
-                styles={{
-                  control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white', minHeight: 36 }),
-                  menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
-                  singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                  input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                  placeholder: (base) => ({ ...base, color: '#bbb', fontWeight: 500 }),
-                  option: (base, state) => ({
-                    ...base,
-                    backgroundColor: state.isSelected
-                      ? '#FFD700'
-                      : state.isFocused
-                      ? '#444'
-                      : '#23272a',
-                    color: state.isSelected ? '#23272a' : '#fff',
-                    fontWeight: state.isSelected ? 700 : 500,
-                  }),
-                }}
               />
             </div>
             {/* Provider Filter (UI only, not functional) */}
@@ -127,28 +160,13 @@ export default function Discover() {
               <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Platform</label>
               <Select
                 options={[{ value: '', label: 'All Platforms' }, ...providerOptions]}
-                value={providerOptions.find(o => o.value === providerId) || { value: '', label: 'All Platforms' }}
-                onChange={opt => setProviderId(opt?.value ? Number(opt.value) : undefined)}
+                value={providerId ? providerOptions.find(o => o.value === providerId) : { value: '', label: 'All Platforms' }}
+                onChange={(option) => setProviderId(option?.value ? Number(option.value) : undefined)}
                 isClearable
                 placeholder="All Platforms"
+                styles={customStyles}
+                className="w-full"
                 classNamePrefix="react-select"
-                styles={{
-                  control: (base) => ({ ...base, backgroundColor: '#23272a', borderColor: '#444', color: 'white', minHeight: 36 }),
-                  menu: (base) => ({ ...base, backgroundColor: '#23272a', color: 'white' }),
-                  singleValue: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                  input: (base) => ({ ...base, color: '#fff', fontWeight: 600 }),
-                  placeholder: (base) => ({ ...base, color: '#bbb', fontWeight: 500 }),
-                  option: (base, state) => ({
-                    ...base,
-                    backgroundColor: state.isSelected
-                      ? '#FFD700'
-                      : state.isFocused
-                      ? '#444'
-                      : '#23272a',
-                    color: state.isSelected ? '#23272a' : '#fff',
-                    fontWeight: state.isSelected ? 700 : 500,
-                  }),
-                }}
               />
             </div>
           </div>
