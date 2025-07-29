@@ -35,6 +35,7 @@ export default function Swipe() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeCount, setSwipeCount] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [swipedMovieIds, setSwipedMovieIds] = useState<Set<number>>(new Set());
   const { addPreference, getLikedGenres, hasPreferences } = useSwipePreferences();
   const { currentRelationship, couplePreferences, addMatchedMovie, coupleId } = useCouples();
   const [showMatch, setShowMatch] = useState(false);
@@ -42,9 +43,6 @@ export default function Swipe() {
   const [genreId, setGenreId] = useState<number | undefined>();
   const [year, setYear] = useState<number | undefined>();
   const [providerId, setProviderId] = useState<number | undefined>();
-  const [genreSearch, setGenreSearch] = useState('');
-  const [yearSearch, setYearSearch] = useState('');
-  const [providerSearch, setProviderSearch] = useState('');
 
   const { data: genres } = useQuery({
     queryKey: ['genres'],
@@ -60,23 +58,50 @@ export default function Swipe() {
   const yearOptions = allYears.map(y => ({ value: y, label: y.toString() }));
   const providerOptions = providers?.map((p: any) => ({ value: p.provider_id, label: p.provider_name })) || [];
 
+  // Load movies with random page and filters
   const { data: moviesData, refetch, error, isLoading } = useQuery({
     queryKey: ['swipe-movies', genreId, year, providerId],
-    queryFn: () => tmdbService.getMoviesForSwipe(1, { genreId, year, providerId }),
+    queryFn: async () => {
+      const randomPage = Math.floor(Math.random() * 10) + 1; // Random page 1-10
+      const response = await tmdbService.getMoviesForSwipe(randomPage, { genreId, year, providerId });
+      return response || [];
+    },
   });
 
   useEffect(() => {
-    if (moviesData) {
-      setCurrentMovies(moviesData);
+    if (moviesData && moviesData.length > 0) {
+      // Filter out already swiped movies and shuffle the remaining ones
+      const availableMovies = moviesData.filter(movie => !swipedMovieIds.has(movie.id));
+      const shuffledMovies = availableMovies.sort(() => Math.random() - 0.5);
+      setCurrentMovies(shuffledMovies);
       setCurrentIndex(0);
     }
-  }, [moviesData]);
+  }, [moviesData, swipedMovieIds]);
+
+  const loadMoreMovies = async () => {
+    setIsLoadingMore(true);
+    try {
+      const randomPage = Math.floor(Math.random() * 10) + 1;
+      const newMovies = await tmdbService.getMoviesForSwipe(randomPage, { genreId, year, providerId });
+      if (newMovies && newMovies.length > 0) {
+        const availableMovies = newMovies.filter(movie => !swipedMovieIds.has(movie.id));
+        setCurrentMovies(prev => [...prev, ...availableMovies]);
+      }
+    } catch (error) {
+      console.error('Error loading more movies:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   const handleSwipe = async (direction: 'left' | 'right', movie: Movie) => {
     // Stop at 20 swipes
     if (swipeCount >= 20) {
       return;
     }
+
+    // Add to swiped movies set
+    setSwipedMovieIds(prev => new Set([...prev, movie.id]));
 
     const preference = direction === 'right' ? 'like' : 'dislike';
     
@@ -93,7 +118,7 @@ export default function Swipe() {
       // Upsert this user's swipe into couple_swipes
       const upsertResult = await supabase.from('couple_swipes').upsert({
         couple_id: coupleId,
-        user_id: currentRelationship?.user1Id || currentRelationship?.user2Id, // fallback if needed
+        user_id: currentRelationship?.user1Id || currentRelationship?.user2Id,
         movie_id: movie.id,
         liked: true,
       });
@@ -123,16 +148,24 @@ export default function Swipe() {
     // Move to next movie
     setCurrentIndex(prev => prev + 1);
     setSwipeCount(prev => prev + 1);
+
+    // Load more movies if we're running low
+    if (currentIndex >= currentMovies.length - 3) {
+      loadMoreMovies();
+    }
   };
 
   const resetSwipes = () => {
     setSwipeCount(0);
     setCurrentIndex(0);
+    setSwipedMovieIds(new Set());
+    refetch();
   };
 
   const startNewBatch = () => {
     setSwipeCount(0);
     setCurrentIndex(0);
+    setSwipedMovieIds(new Set());
     refetch();
   };
 
@@ -377,6 +410,14 @@ export default function Swipe() {
             Reset Progress
           </Button>
         </div>
+
+        {/* Loading indicator */}
+        {isLoadingMore && (
+          <div className="text-center mt-4">
+            <div className="w-6 h-6 border-2 border-netflix border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            <p className="text-gray-400 text-sm">Loading more movies...</p>
+          </div>
+        )}
       </div>
 
       {/* Match Popup */}
