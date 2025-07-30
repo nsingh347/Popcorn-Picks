@@ -358,7 +358,7 @@ export default function Swipe() {
 
         {/* Main Swipe Area */}
         <div className="flex justify-center">
-          <div className="relative">
+          <div className="relative w-80 h-96 sm:w-96 sm:h-[28rem]">
             {/* Current Movie */}
             <SwipeCard
               movie={getCurrentMovie()}
