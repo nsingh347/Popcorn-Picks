@@ -70,9 +70,10 @@ export default function Swipe() {
       }
       
       try {
-        const response = await tmdbService.getMoviesForSwipe(randomPage, { genreId, year, providerId });
-        console.log('TMDB response:', response?.length, 'movies');
-        return response || [];
+        // Use getPopularMovies instead of getMoviesForSwipe for now
+        const response = await tmdbService.getPopularMovies(randomPage);
+        console.log('TMDB response:', response?.results?.length, 'movies');
+        return response?.results || [];
       } catch (error) {
         console.error('Error in queryFn:', error);
         throw error;
@@ -101,7 +102,8 @@ export default function Swipe() {
     setIsLoadingMore(true);
     try {
       const randomPage = Math.floor(Math.random() * 10) + 1;
-      const newMovies = await tmdbService.getMoviesForSwipe(randomPage, { genreId, year, providerId });
+      const response = await tmdbService.getPopularMovies(randomPage);
+      const newMovies = response?.results || [];
       if (newMovies && newMovies.length > 0) {
         const availableMovies = newMovies.filter(movie => !swipedMovieIds.has(movie.id));
         setCurrentMovies(prev => [...prev, ...availableMovies]);
