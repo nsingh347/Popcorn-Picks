@@ -1,60 +1,122 @@
 import { useState, useEffect } from 'react';
-import type { SwipePreference } from '@/types/movie';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/AuthContext';
+
+export interface SwipePreference {
+  id: string;
+  userId: string;
+  movieId: number;
+  preference: 'like' | 'dislike';
+  createdAt: string;
+}
 
 export function useSwipePreferences() {
   const [preferences, setPreferences] = useState<SwipePreference[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    // No localStorage: do not load from or save to localStorage
-    setPreferences([]); // Always start empty
-  }, []);
+    if (user) {
+      loadPreferences();
+    } else {
+      setPreferences([]);
+      setIsLoading(false);
+    }
+  }, [user]);
 
-  const addPreference = (preference: SwipePreference) => {
-    const newPreferences = [...preferences, preference];
-    setPreferences(newPreferences);
-    // No localStorage
+  const loadPreferences = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('swipe_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPreferences(data || []);
+    } catch (error) {
+      console.error('Error loading swipe preferences:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const getLikedGenres = (): number[] => {
-    const likedPreferences = preferences.filter(p => p.preference === 'like');
-    const genreCounts: Record<number, number> = {};
-    
-    likedPreferences.forEach(pref => {
-      pref.genreIds.forEach(genreId => {
-        genreCounts[genreId] = (genreCounts[genreId] || 0) + 1;
-      });
-    });
+  const addPreference = async (movieId: number, preference: 'like' | 'dislike') => {
+    if (!user) return;
 
-    // Return genres sorted by frequency
-    return Object.entries(genreCounts)
-      .sort(([, a], [, b]) => b - a)
-      .map(([genreId]) => parseInt(genreId));
+    try {
+      const { data, error } = await supabase
+        .from('swipe_preferences')
+        .insert({
+          user_id: user.id,
+          movie_id: movieId,
+          preference
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setPreferences(prev => [data, ...prev]);
+      return data;
+    } catch (error) {
+      console.error('Error adding swipe preference:', error);
+      throw error;
+    }
   };
 
-  const getLikedMovieIds = (): number[] => {
-    return preferences
-      .filter(p => p.preference === 'like')
-      .map(p => p.movieId);
+  const removePreference = async (movieId: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('swipe_preferences')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('movie_id', movieId);
+
+      if (error) throw error;
+      
+      setPreferences(prev => prev.filter(p => p.movieId !== movieId));
+    } catch (error) {
+      console.error('Error removing swipe preference:', error);
+      throw error;
+    }
   };
 
-  const getDislikedMovieIds = (): number[] => {
-    return preferences
-      .filter(p => p.preference === 'dislike')
-      .map(p => p.movieId);
+  const getPreference = (movieId: number): 'like' | 'dislike' | null => {
+    const preference = preferences.find(p => p.movieId === movieId);
+    return preference ? preference.preference : null;
   };
 
-  const clearPreferences = () => {
-    setPreferences([]);
-    // No localStorage
+  const getLikedMovies = () => {
+    return preferences.filter(p => p.preference === 'like');
+  };
+
+  const getDislikedMovies = () => {
+    return preferences.filter(p => p.preference === 'dislike');
+  };
+
+  const getPreferenceCount = () => {
+    return {
+      liked: getLikedMovies().length,
+      disliked: getDislikedMovies().length,
+      total: preferences.length
+    };
   };
 
   return {
     preferences,
+    isLoading,
     addPreference,
-    getLikedGenres,
-    getLikedMovieIds,
-    getDislikedMovieIds,
-    clearPreferences,
-    hasPreferences: preferences.length > 0
+    removePreference,
+    getPreference,
+    getLikedMovies,
+    getDislikedMovies,
+    getPreferenceCount,
+    loadPreferences
   };
 }
