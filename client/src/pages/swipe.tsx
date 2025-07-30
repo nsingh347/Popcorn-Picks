@@ -53,8 +53,8 @@ export default function Swipe() {
     queryFn: () => tmdbService.getWatchProvidersList(),
   });
 
-  // Simplified options for now
-  const allYears = Array.from({ length: 45 }, (_, i) => 2024 - i);
+  // Years from 2025 down to 1980 (46 years total)
+  const allYears = Array.from({ length: 46 }, (_, i) => 2025 - i);
 
   // Load movies with random page and filters
   const { data: moviesData, refetch, error, isLoading } = useQuery({
