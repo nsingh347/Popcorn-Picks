@@ -238,7 +238,7 @@ export function MovieDetailModal({ movieId, isOpen, onClose }: MovieDetailModalP
                               <img src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`} alt={provider.name} className="inline-block w-5 h-5 mr-1 align-middle" />
                             )}
                             {provider.name}
-                          </Badge>
+                        </Badge>
                         )
                       ))}
                     </div>

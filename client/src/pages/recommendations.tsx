@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, Calendar } from 'lucide-react';
+import { Star, Calendar, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MovieCard } from '@/components/movie-card';
@@ -13,11 +13,12 @@ export default function Recommendations() {
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<string>('popularity');
   const [filterGenre, setFilterGenre] = useState<string>('all');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Fetch popular movies
-  const { data: popularMovies, isLoading, error } = useQuery({
-    queryKey: ['popular-movies'],
-    queryFn: () => tmdbService.getPopularMovies(),
+  const { data: popularMovies, isLoading, error, refetch } = useQuery({
+    queryKey: ['popular-movies', refreshKey],
+    queryFn: () => tmdbService.getPopularMovies(Math.floor(Math.random() * 500) + 1), // Random page for fresh recommendations
   });
 
   // Fetch genres for filtering
@@ -27,6 +28,12 @@ export default function Recommendations() {
   });
 
   const movies = popularMovies?.results || [];
+
+  const handleClearRecommendations = () => {
+    setRefreshKey(prev => prev + 1);
+    setSortBy('popularity');
+    setFilterGenre('all');
+  };
 
   const filteredAndSortedMovies = movies.filter(movie => {
     if (filterGenre === 'all') return true;
@@ -81,9 +88,26 @@ export default function Recommendations() {
           >
             Movie <span className="text-netflix">Recommendations</span>
           </motion.h1>
-          <p className="text-gray-300 text-lg">
+          <p className="text-gray-300 text-lg mb-6">
             Discover amazing movies tailored for you
           </p>
+          
+          {/* Clear Recommendations Button */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Button
+              onClick={handleClearRecommendations}
+              variant="outline"
+              className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+              disabled={isLoading}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Clear & Refresh Recommendations
+            </Button>
+          </motion.div>
         </div>
 
         {/* Filters */}

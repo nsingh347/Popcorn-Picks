@@ -22,11 +22,11 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated && !error) {
-      setShowSuccess(true);
+    setShowSuccess(true);
       const timer = setTimeout(() => {
-        setShowSuccess(false);
-        setLocation('/discover');
-      }, 1800);
+      setShowSuccess(false);
+      setLocation('/discover');
+    }, 1800);
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, error, setLocation]);

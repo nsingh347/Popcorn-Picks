@@ -139,7 +139,7 @@ export default function Couples() {
   // Hide all couple features for now
   return (
     <div className="min-h-screen bg-deep-black flex items-center justify-center">
-      <div className="text-center">
+            <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-4">Couple features are currently disabled.</h2>
         <p className="text-gray-400">This app is now a swipe-based movie recommendation app for individuals.</p>
       </div>
