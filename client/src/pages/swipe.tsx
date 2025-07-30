@@ -12,7 +12,6 @@ import { useQuery } from '@tanstack/react-query';
 import type { Movie } from '@/types/movie';
 import { Link } from 'wouter';
 import { useCouples } from '@/contexts/CouplesContext';
-import Select from 'react-select';
 import { useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -53,20 +52,8 @@ export default function Swipe() {
     queryFn: () => tmdbService.getWatchProvidersList(),
   });
 
+  // Simplified options for now
   const allYears = Array.from({ length: 45 }, (_, i) => 2024 - i);
-  const genreOptions = genres?.genres?.map((g: any) => ({ value: g.id, label: g.name })) || [];
-  const yearOptions = allYears.map(y => ({ value: y, label: y.toString() }));
-  const providerOptions = providers?.map((p: any) => ({ value: p.provider_id, label: p.provider_name })) || [];
-
-  // Debug logging
-  console.log('Swipe page data:', {
-    genres: genres?.genres?.length,
-    providers: providers?.length,
-    genreOptions: genreOptions.length,
-    yearOptions: yearOptions.length,
-    providerOptions: providerOptions.length,
-    moviesData: moviesData?.length
-  });
 
   // Load movies with random page and filters
   const { data: moviesData, refetch, error, isLoading } = useQuery({
@@ -88,6 +75,9 @@ export default function Swipe() {
     },
     enabled: true, // Always enable the query
   });
+
+  // Debug logging - simplified to avoid potential issues
+  console.log('Swipe page loaded');
 
   useEffect(() => {
     if (moviesData && moviesData.length > 0) {
@@ -196,67 +186,6 @@ export default function Swipe() {
   const progress = (swipeCount / 20) * 100;
   const likedGenres = getLikedGenres();
 
-  const customStyles = {
-    control: (provided: any) => ({
-      ...provided,
-      backgroundColor: '#23272a',
-      borderColor: '#444',
-      minHeight: '40px',
-      boxShadow: 'none',
-      '&:hover': {
-        borderColor: '#666'
-      }
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: '#23272a',
-      border: '1px solid #444',
-      zIndex: 9999
-    }),
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isSelected ? '#FFD700' : state.isFocused ? '#444' : '#23272a',
-      color: state.isSelected ? '#23272a' : '#fff',
-      fontWeight: state.isSelected ? 700 : 500,
-      '&:hover': {
-        backgroundColor: state.isSelected ? '#FFD700' : '#444'
-      }
-    }),
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: '#fff',
-      fontWeight: 600
-    }),
-    input: (provided: any) => ({
-      ...provided,
-      color: '#fff',
-      fontWeight: 600
-    }),
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: '#bbb',
-      fontWeight: 500
-    }),
-    indicatorSeparator: (provided: any) => ({
-      ...provided,
-      backgroundColor: '#444'
-    }),
-    dropdownIndicator: (provided: any) => ({
-      ...provided,
-      color: '#bbb',
-      '&:hover': {
-        color: '#fff'
-      }
-    }),
-    clearIndicator: (provided: any) => ({
-      ...provided,
-      color: '#bbb',
-      '&:hover': {
-        color: '#fff'
-      }
-    })
-  };
-
   if (error) {
     // Check if it's a missing API key error
     if (error.message?.includes('TMDB API key')) {
@@ -335,49 +264,10 @@ export default function Swipe() {
   return (
     <div className="min-h-screen bg-deep-black pt-20 pb-8">
       <div className="container mx-auto px-4 sm:px-6">
-        {/* Filters */}
-        <div className="flex flex-nowrap gap-4 sm:gap-8 justify-center mb-8 overflow-visible whitespace-nowrap">
-          {/* Genre Filter */}
-          <div className="flex flex-col items-start min-w-[140px] sm:min-w-[200px]">
-            <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Genre</label>
-            <Select
-              options={[{ value: '', label: 'All Genres' }, ...genreOptions]}
-              value={genreId ? genreOptions.find(o => o.value === genreId) : { value: '', label: 'All Genres' }}
-              onChange={(option) => setGenreId(option?.value ? Number(option.value) : undefined)}
-              isClearable
-              placeholder="All Genres"
-              styles={customStyles}
-              className="w-full"
-              classNamePrefix="react-select"
-            />
-          </div>
-          {/* Year Filter */}
-          <div className="flex flex-col items-start min-w-[100px] sm:min-w-[140px]">
-            <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Release Year</label>
-            <Select
-              options={[{ value: '', label: 'All Years' }, ...yearOptions]}
-              value={year ? yearOptions.find(o => o.value === year) : { value: '', label: 'All Years' }}
-              onChange={(option) => setYear(option?.value ? Number(option.value) : undefined)}
-              isClearable
-              placeholder="All Years"
-              styles={customStyles}
-              className="w-full"
-              classNamePrefix="react-select"
-            />
-          </div>
-          {/* Provider Filter */}
-          <div className="flex flex-col items-start min-w-[120px] sm:min-w-[220px]">
-            <label className="text-gray-300 mb-1 font-medium text-sm sm:text-base">Platform</label>
-            <Select
-              options={[{ value: '', label: 'All Platforms' }, ...providerOptions]}
-              value={providerId ? providerOptions.find(o => o.value === providerId) : { value: '', label: 'All Platforms' }}
-              onChange={(option) => setProviderId(option?.value ? Number(option.value) : undefined)}
-              isClearable
-              placeholder="All Platforms"
-              styles={customStyles}
-              className="w-full"
-              classNamePrefix="react-select"
-            />
+        {/* Filters - Simplified */}
+        <div className="flex flex-wrap gap-4 justify-center mb-8">
+          <div className="text-gray-300 text-sm">
+            Filters coming soon...
           </div>
         </div>
         {/* Header */}
