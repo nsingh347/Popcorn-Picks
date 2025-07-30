@@ -66,17 +66,16 @@ export default function Recommendations() {
   const { data: popularMovies } = useQuery({
     queryKey: ['popular-fallback'],
     queryFn: () => tmdbService.getPopularMovies(),
-    enabled: !hasPreferences,
+    enabled: true, // Always fetch popular movies as fallback
   });
 
-  const movies = hasPreferences ? recommendations : popularMovies?.results;
   const likedGenres = getLikedGenres();
 
   const getGenreName = (genreId: number): string => {
     return genres?.genres.find(g => g.id === genreId)?.name || `Genre ${genreId}`;
   };
 
-  const filteredAndSortedMovies = movies ? movies.filter(movie => {
+  const filteredAndSortedMovies = moviesToShow ? moviesToShow.filter(movie => {
     if (filterGenre === 'all') return true;
     return movie.genre_ids.includes(parseInt(filterGenre));
   }).sort((a, b) => {
@@ -99,57 +98,8 @@ export default function Recommendations() {
     setPersonalize({ genres: [], languages: [] });
   }, []);
 
-  if (!hasPreferences) {
-    return (
-      <div className="min-h-screen bg-deep-black pt-20">
-        <div className="container mx-auto px-6 py-12">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="text-6xl mb-6">🎬</div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-6">
-              No Preferences Yet
-            </h1>
-            <p className="text-gray-300 text-lg mb-8">
-              Start swiping on movies to get personalized recommendations based on your taste!
-            </p>
-            <div className="space-y-4">
-              <Link href="/swipe">
-                <Button className="bg-netflix hover:bg-red-700 px-8 py-3 text-lg text-white">
-                  <TrendingUp className="w-5 h-5 mr-2" />
-                  Start Swiping
-                </Button>
-              </Link>
-              <div className="text-center">
-                <p className="text-gray-400 mb-6">Or browse popular movies while you're here:</p>
-                {popularMovies && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                    {popularMovies.results.slice(0, 12).map((movie, index) => (
-                      <motion.div
-                        key={movie.id}
-                        initial={{ y: 50, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ duration: 0.6, delay: index * 0.1 }}
-                      >
-                        <MovieCard
-                          movie={movie}
-                          onCardClick={() => setSelectedMovieId(movie.id)}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <MovieDetailModal
-          movieId={selectedMovieId}
-          isOpen={!!selectedMovieId}
-          onClose={() => setSelectedMovieId(null)}
-        />
-      </div>
-    );
-  }
+  // Always show movies - either personalized recommendations or popular movies
+  const moviesToShow = hasPreferences ? recommendations : popularMovies?.results;
 
   return (
     <div className="min-h-screen bg-deep-black pt-20 pb-8">
