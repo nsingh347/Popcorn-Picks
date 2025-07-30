@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, TrendingUp, Star, Play } from 'lucide-react';
+import { RotateCcw, TrendingUp, Star, Play, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SwipeCard } from '@/components/swipe-card';
 import { ApiError } from '@/components/api-error';
 import { useSwipePreferences } from '@/hooks/use-swipe-preferences';
@@ -70,13 +71,16 @@ export default function Swipe() {
       }
       
       try {
-        // Use getPopularMovies instead of getMoviesForSwipe for now
-        console.log('Calling tmdbService.getPopularMovies with page:', randomPage);
-        const response = await tmdbService.getPopularMovies(randomPage);
-        console.log('TMDB response object:', response);
-        console.log('TMDB response results:', response?.results);
-        console.log('TMDB response results length:', response?.results?.length);
-        const movies = response?.results || [];
+        // Use the existing getMoviesForSwipe method which handles all filters
+        console.log('Calling tmdbService.getMoviesForSwipe with filters:', { genreId, year, providerId });
+        const movies = await tmdbService.getMoviesForSwipe(randomPage, {
+          genreId,
+          year,
+          providerId
+        });
+        
+        console.log('TMDB response results:', movies);
+        console.log('TMDB response results length:', movies.length);
         console.log('Returning movies:', movies.length);
         return movies;
       } catch (error) {
@@ -326,12 +330,78 @@ export default function Swipe() {
   return (
     <div className="min-h-screen bg-deep-black pt-20 pb-8">
       <div className="container mx-auto px-4 sm:px-6">
-        {/* Filters - Simplified */}
-        <div className="flex flex-wrap gap-4 justify-center mb-8">
-          <div className="text-gray-300 text-sm">
-            Filters coming soon...
+        {/* Filters */}
+        <motion.div
+          className="flex flex-wrap gap-4 justify-center mb-8"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-200 font-semibold">Genre:</span>
+            <Select value={genreId?.toString() || 'all'} onValueChange={(value) => setGenreId(value === 'all' ? undefined : parseInt(value))}>
+              <SelectTrigger className="w-40 bg-gray-800 border-gray-600 text-white">
+                <SelectValue placeholder="All Genres" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectItem value="all">All Genres</SelectItem>
+                {genres?.genres.map((genre) => (
+                  <SelectItem key={genre.id} value={genre.id.toString()}>
+                    {genre.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-gray-200 font-semibold">Year:</span>
+            <Select value={year?.toString() || 'all'} onValueChange={(value) => setYear(value === 'all' ? undefined : parseInt(value))}>
+              <SelectTrigger className="w-32 bg-gray-800 border-gray-600 text-white">
+                <SelectValue placeholder="All Years" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectItem value="all">All Years</SelectItem>
+                {allYears.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-gray-200 font-semibold">Platform:</span>
+            <Select value={providerId?.toString() || 'all'} onValueChange={(value) => setProviderId(value === 'all' ? undefined : parseInt(value))}>
+              <SelectTrigger className="w-40 bg-gray-800 border-gray-600 text-white">
+                <SelectValue placeholder="All Platforms" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectItem value="all">All Platforms</SelectItem>
+                {providers?.slice(0, 10).map((provider) => (
+                  <SelectItem key={provider.provider_id} value={provider.provider_id.toString()}>
+                    {provider.provider_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            onClick={() => {
+              setGenreId(undefined);
+              setYear(undefined);
+              setProviderId(undefined);
+              refetch();
+            }}
+            variant="outline"
+            className="border-gray-600 text-gray-400 hover:bg-gray-800 hover:text-white"
+          >
+            Clear Filters
+          </Button>
+        </motion.div>
         {/* Header */}
         <div className="text-center mb-4 sm:mb-8">
           <motion.h1

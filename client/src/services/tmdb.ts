@@ -22,7 +22,7 @@ class TMDBService {
     }
   }
 
-  private async fetchFromTMDB(endpoint: string): Promise<any> {
+  async fetchFromTMDB(endpoint: string): Promise<any> {
     if (!this.apiKey) {
       throw new Error('TMDB API key is not configured. Please check your .env file.');
     }
