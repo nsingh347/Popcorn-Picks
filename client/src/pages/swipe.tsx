@@ -204,7 +204,11 @@ export default function Swipe() {
     refetch();
   };
 
-  const getCurrentMovie = () => currentMovies[currentIndex];
+  const getCurrentMovie = () => {
+    const movie = currentMovies[currentIndex];
+    console.log('getCurrentMovie called:', { currentIndex, movie, currentMoviesLength: currentMovies.length });
+    return movie;
+  };
   const getUpcomingMovies = () => currentMovies.slice(currentIndex + 1, currentIndex + 4);
 
   const progress = (swipeCount / 20) * 100;
@@ -242,7 +246,10 @@ export default function Swipe() {
     );
   }
 
-  if (!getCurrentMovie()) {
+  const currentMovie = getCurrentMovie();
+  console.log('Checking current movie:', currentMovie);
+  
+  if (!currentMovie) {
     // Check if it's because no movies were loaded (likely due to missing API key)
     if (!moviesData || moviesData.length === 0) {
       return (
