@@ -249,6 +249,19 @@ export default function Swipe() {
   const currentMovie = getCurrentMovie();
   console.log('Checking current movie:', currentMovie);
   
+  // Add a check to ensure we have movies data and current movies are set
+  if (!currentMovie && moviesData && moviesData.length > 0 && currentMovies.length === 0) {
+    console.log('Movies data exists but current movies not set yet - showing loading');
+    return (
+      <div className="min-h-screen bg-deep-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-netflix mx-auto mb-4"></div>
+          <p className="text-white">Processing movies...</p>
+        </div>
+      </div>
+    );
+  }
+  
   if (!currentMovie) {
     // Check if it's because no movies were loaded (likely due to missing API key)
     if (!moviesData || moviesData.length === 0) {
