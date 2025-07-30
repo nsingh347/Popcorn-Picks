@@ -147,6 +147,18 @@ export default function Swipe() {
       genreIds: movie.genre_ids
     });
 
+    // Save liked movies to sessionStorage for Recommendations page
+    if (direction === 'right') {
+      const storedLikes = sessionStorage.getItem('likedMovies');
+      const likedMovies = storedLikes ? JSON.parse(storedLikes) : [];
+      
+      // Check if movie is already in likes to avoid duplicates
+      if (!likedMovies.find((m: Movie) => m.id === movie.id)) {
+        const updatedLikes = [...likedMovies, movie];
+        sessionStorage.setItem('likedMovies', JSON.stringify(updatedLikes));
+      }
+    }
+
     // --- Couple match logic ---
     if (direction === 'right' && coupleId) {
       console.log('Swipe: coupleId', coupleId, 'user', currentRelationship?.user1Id || currentRelationship?.user2Id, 'movie', movie.id);
