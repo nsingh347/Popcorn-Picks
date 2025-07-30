@@ -36,7 +36,7 @@ export default function Swipe() {
   const [swipeCount, setSwipeCount] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [swipedMovieIds, setSwipedMovieIds] = useState<Set<number>>(new Set());
-  const { addPreference, getLikedMovies, getDislikedMovies } = useSwipePreferences();
+  const { addPreference, getLikedGenres, hasPreferences } = useSwipePreferences();
   const { currentRelationship, couplePreferences, addMatchedMovie, coupleId } = useCouples();
   const [showMatch, setShowMatch] = useState(false);
   const [matchedMovie, setMatchedMovie] = useState<Movie | null>(null);
@@ -126,12 +126,12 @@ export default function Swipe() {
 
     const preference = direction === 'right' ? 'like' : 'dislike';
     
-    // Add preference to database
-    try {
-      await addPreference(movie.id, preference);
-    } catch (error) {
-      console.error('Error saving preference:', error);
-    }
+    // Add preference to local storage
+    addPreference({
+      movieId: movie.id,
+      preference,
+      genreIds: movie.genre_ids
+    });
 
     // --- Couple match logic ---
     if (direction === 'right' && coupleId) {
@@ -194,8 +194,7 @@ export default function Swipe() {
   const getUpcomingMovies = () => currentMovies.slice(currentIndex + 1, currentIndex + 4);
 
   const progress = (swipeCount / 20) * 100;
-  const likedMovies = getLikedMovies();
-  const dislikedMovies = getDislikedMovies();
+  const likedGenres = getLikedGenres();
 
   const customStyles = {
     control: (provided: any) => ({

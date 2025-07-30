@@ -2,17 +2,15 @@ import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Play, Users, LogIn, LogOut, Heart, User as UserIcon, Sparkles, Bot } from 'lucide-react';
+import { Menu, Play, Users, LogIn, LogOut, Heart, User as UserIcon, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCouples } from '@/contexts/CouplesContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { AIChat } from '@/components/ai-chat';
 
 export function Navigation() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const { currentRelationship } = useCouples();
   const { theme, toggleTheme } = useTheme();
@@ -32,7 +30,6 @@ export function Navigation() {
     { href: '/discover', label: 'Discover' },
     { href: '/swipe', label: 'Swipe' },
     { href: '/recommendations', label: 'Recommendations' },
-    { href: '/ai-recommendations', label: 'AI Recommendations', icon: Sparkles },
     { href: '/watchlist', label: 'Watchlist' },
     { href: '/couples', label: 'Couples', icon: currentRelationship ? Heart : Users }
   ];
@@ -67,15 +64,6 @@ export function Navigation() {
           </span>
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-accent-gold" title="Toggle theme">
             {theme === 'dark' ? <span>🌙</span> : <span>☀️</span>}
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setIsAIChatOpen(true)}
-            className="text-blue-400 hover:text-blue-300"
-            title="AI Chat"
-          >
-            <Bot className="w-4 h-4" />
           </Button>
           <Button 
             variant="outline"
@@ -150,9 +138,6 @@ export function Navigation() {
           </Sheet>
         </div>
       </div>
-      
-      {/* AI Chat Modal */}
-      <AIChat isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
     </nav>
   );
 }
