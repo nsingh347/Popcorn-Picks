@@ -29,12 +29,16 @@ export function SwipeCard({ movie, onSwipe, isActive = true, index = 0, swipeCou
   const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (!isActive || swipeCount >= 20) return;
+    if (!isActive) return;
     
     const offset = info.offset.x;
     const velocity = info.velocity.x;
     
-    if (Math.abs(offset) > 100 || Math.abs(velocity) > 500) {
+    // Lower threshold for mobile devices
+    const threshold = window.innerWidth < 768 ? 50 : 100;
+    const velocityThreshold = window.innerWidth < 768 ? 300 : 500;
+    
+    if (Math.abs(offset) > threshold || Math.abs(velocity) > velocityThreshold) {
       const direction = offset > 0 ? 'right' : 'left';
       onSwipe(direction, movie);
     }
@@ -87,6 +91,8 @@ export function SwipeCard({ movie, onSwipe, isActive = true, index = 0, swipeCou
       style={{ zIndex: 20 }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.1}
+      dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
       onDragEnd={handleDragEnd}
       whileDrag={{ scale: 1.05, rotate: 0 }}
       animate={{ 
@@ -100,6 +106,8 @@ export function SwipeCard({ movie, onSwipe, isActive = true, index = 0, swipeCou
         opacity: 0,
         transition: { duration: 0.3 }
       }}
+      // Better touch handling for mobile
+      whileTap={{ scale: 0.98 }}
     >
       <div className="poster-aspect relative overflow-hidden rounded-2xl">
         {!imageError && posterUrl ? (

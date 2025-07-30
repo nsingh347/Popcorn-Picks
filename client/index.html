@@ -2,7 +2,57 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Popcorn Picks">
+    <meta name="theme-color" content="#000000">
+    <meta name="msapplication-TileColor" content="#000000">
+    
+    <!-- Mobile-specific CSS -->
+    <style>
+      /* Prevent zoom on input focus */
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+      
+      /* Prevent horizontal scroll */
+      body {
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Better touch targets */
+      button, [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      
+      /* Prevent text selection on swipe elements */
+      .swipe-card {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      /* Fix for iOS Safari */
+      @supports (-webkit-touch-callout: none) {
+        .swipe-card {
+          -webkit-transform: translateZ(0);
+        }
+      }
+      
+      /* Prevent pull-to-refresh on mobile */
+      html, body {
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
+      }
+    </style>
+    
     <title>Popcorn Picks - AI Movie Recommender</title>
     <meta name="description" content="Discover your next favorite movie with our AI-powered swipe-based recommendation engine. Explore Hollywood and Bollywood films effortlessly.">
     
