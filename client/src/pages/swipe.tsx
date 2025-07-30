@@ -69,15 +69,23 @@ export default function Swipe() {
         return [];
       }
       
-      const response = await tmdbService.getMoviesForSwipe(randomPage, { genreId, year, providerId });
-      console.log('TMDB response:', response?.length, 'movies');
-      return response || [];
+      try {
+        const response = await tmdbService.getMoviesForSwipe(randomPage, { genreId, year, providerId });
+        console.log('TMDB response:', response?.length, 'movies');
+        return response || [];
+      } catch (error) {
+        console.error('Error in queryFn:', error);
+        throw error;
+      }
     },
     enabled: true, // Always enable the query
   });
 
   // Debug logging - simplified to avoid potential issues
   console.log('Swipe page loaded');
+  console.log('Movies data:', moviesData);
+  console.log('Current movies:', currentMovies);
+  console.log('Current index:', currentIndex);
 
   useEffect(() => {
     if (moviesData && moviesData.length > 0) {
