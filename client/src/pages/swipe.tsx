@@ -248,6 +248,12 @@ export default function Swipe() {
 
   const currentMovie = getCurrentMovie();
   console.log('Checking current movie:', currentMovie);
+  console.log('Current movie details:', {
+    id: currentMovie?.id,
+    title: currentMovie?.title,
+    poster_path: currentMovie?.poster_path,
+    release_date: currentMovie?.release_date
+  });
   
   // Add a check to ensure we have movies data and current movies are set
   if (!currentMovie && moviesData && moviesData.length > 0 && currentMovies.length === 0) {

@@ -15,6 +15,13 @@ interface SwipeCardProps {
 }
 
 export function SwipeCard({ movie, onSwipe, isActive = true, index = 0, swipeCount = 0 }: SwipeCardProps) {
+  console.log('SwipeCard rendered with movie:', {
+    id: movie?.id,
+    title: movie?.title,
+    poster_path: movie?.poster_path,
+    isActive
+  });
+  
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
