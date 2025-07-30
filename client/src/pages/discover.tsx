@@ -18,6 +18,10 @@ export default function Discover() {
     queryKey: ['search-movies', search],
     queryFn: async () => {
       if (!search) return [];
+      if (!import.meta.env.VITE_TMDB_API_KEY) {
+        console.error('TMDB API key is missing!');
+        return [];
+      }
       const response = await tmdbService.searchMovies(search);
       return response.results || [];
     },
@@ -27,6 +31,10 @@ export default function Discover() {
   const { data: latest } = useQuery({
     queryKey: ['latest-movies'],
     queryFn: async () => {
+      if (!import.meta.env.VITE_TMDB_API_KEY) {
+        console.error('TMDB API key is missing!');
+        return [];
+      }
       const response = await tmdbService.getLatestMovies();
       return response.results || [];
     },
@@ -35,6 +43,10 @@ export default function Discover() {
   const { data: trending } = useQuery({
     queryKey: ['trending-movies'],
     queryFn: async () => {
+      if (!import.meta.env.VITE_TMDB_API_KEY) {
+        console.error('TMDB API key is missing!');
+        return [];
+      }
       const response = await tmdbService.getTrendingMovies();
       return response.results || [];
     },
@@ -43,6 +55,10 @@ export default function Discover() {
   const { data: critics } = useQuery({
     queryKey: ['critics-favorite'],
     queryFn: async () => {
+      if (!import.meta.env.VITE_TMDB_API_KEY) {
+        console.error('TMDB API key is missing!');
+        return [];
+      }
       const response = await tmdbService.getCriticsFavorite();
       return response.results || [];
     },
@@ -149,6 +165,24 @@ export default function Discover() {
         <motion.h1 className="text-4xl font-bold mb-8 text-center" initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6 }}>
           Discover Movies
         </motion.h1>
+        
+        {/* API Key Missing Warning */}
+        {!import.meta.env.VITE_TMDB_API_KEY && (
+          <div className="mb-8 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+            <h3 className="text-lg font-semibold text-red-400 mb-2">⚠️ TMDB API Key Missing</h3>
+            <p className="text-gray-300 mb-3">
+              Movies cannot be loaded because the TMDB API key is not configured.
+            </p>
+            <div className="bg-gray-800 p-3 rounded text-sm">
+              <p className="text-gray-300 mb-1">Add this to your .env file:</p>
+              <code className="text-green-400">VITE_TMDB_API_KEY=your_api_key_here</code>
+              <p className="text-gray-400 mt-2 text-xs">
+                Get a free API key from: <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">TMDB API</a>
+              </p>
+            </div>
+          </div>
+        )}
+        
         {/* Filters */}
         {!search && (
           <div className="flex flex-nowrap gap-4 sm:gap-8 justify-center mb-8 overflow-visible whitespace-nowrap">

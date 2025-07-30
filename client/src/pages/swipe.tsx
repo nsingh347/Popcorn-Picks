@@ -78,7 +78,8 @@ export default function Swipe() {
       // Check if API key is available
       if (!import.meta.env.VITE_TMDB_API_KEY) {
         console.error('TMDB API key is missing! Please add VITE_TMDB_API_KEY to your .env file');
-        throw new Error('TMDB API key is not configured. Please check your environment variables.');
+        // Return empty array instead of throwing error
+        return [];
       }
       
       const response = await tmdbService.getMoviesForSwipe(randomPage, { genreId, year, providerId });
@@ -289,6 +290,35 @@ export default function Swipe() {
   }
 
   if (!getCurrentMovie()) {
+    // Check if it's because no movies were loaded (likely due to missing API key)
+    if (!moviesData || moviesData.length === 0) {
+      return (
+        <div className="min-h-screen bg-deep-black flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto px-4">
+            <h2 className="text-2xl font-bold text-white mb-4">No Movies Available</h2>
+            <p className="text-gray-400 mb-6">
+              {!import.meta.env.VITE_TMDB_API_KEY 
+                ? "TMDB API key is missing. Please add VITE_TMDB_API_KEY to your environment variables."
+                : "Unable to load movies. Please check your internet connection and try again."
+              }
+            </p>
+            {!import.meta.env.VITE_TMDB_API_KEY && (
+              <div className="bg-gray-800 p-4 rounded-lg text-left mb-6">
+                <p className="text-sm text-gray-300 mb-2">To fix this, add to your .env file:</p>
+                <code className="text-xs text-green-400">VITE_TMDB_API_KEY=your_api_key_here</code>
+                <p className="text-xs text-gray-400 mt-2">
+                  Get a free API key from: <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">TMDB API</a>
+                </p>
+              </div>
+            )}
+            <Button onClick={refetch} className="bg-netflix text-white">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="min-h-screen bg-deep-black flex items-center justify-center">
         <div className="text-center">
