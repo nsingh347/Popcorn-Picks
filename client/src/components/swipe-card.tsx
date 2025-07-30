@@ -42,7 +42,6 @@ export function SwipeCard({ movie, onSwipe, isActive = true, index = 0, swipeCou
 
   const handleButtonSwipe = (direction: 'left' | 'right') => {
     console.log('Button swipe:', direction, movie);
-    if (swipeCount >= 20) return;
     onSwipe(direction, movie);
   };
 

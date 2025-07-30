@@ -117,14 +117,27 @@ export default function Swipe() {
   }, [moviesData, swipedMovieIds]);
 
   const loadMoreMovies = async () => {
+    if (isLoadingMore) return;
+    
     setIsLoadingMore(true);
     try {
-      const randomPage = Math.floor(Math.random() * 10) + 1;
-      const response = await tmdbService.getPopularMovies(randomPage);
-      const newMovies = response?.results || [];
-      if (newMovies && newMovies.length > 0) {
-        const availableMovies = newMovies.filter(movie => !swipedMovieIds.has(movie.id));
-        setCurrentMovies(prev => [...prev, ...availableMovies]);
+      const randomPage = Math.floor(Math.random() * 500) + 1;
+      console.log('Loading more movies with page:', randomPage);
+      
+      const newMovies = await tmdbService.getMoviesForSwipe(randomPage, {
+        genreId,
+        year,
+        providerId
+      });
+      
+      // Filter out already swiped movies
+      const availableNewMovies = newMovies.filter(movie => !swipedMovieIds.has(movie.id));
+      
+      if (availableNewMovies.length > 0) {
+        setCurrentMovies(prev => [...prev, ...availableNewMovies]);
+      } else {
+        // If still no new movies, try another page after a delay
+        setTimeout(() => loadMoreMovies(), 1000);
       }
     } catch (error) {
       console.error('Error loading more movies:', error);
@@ -134,12 +147,7 @@ export default function Swipe() {
   };
 
   const handleSwipe = async (direction: 'left' | 'right', movie: Movie) => {
-    // Stop at 20 swipes
-    if (swipeCount >= 20) {
-      return;
-    }
-
-    // Add to swiped movies set
+    // Add to swiped movies set to prevent repeats
     setSwipedMovieIds(prev => new Set([...prev, movie.id]));
 
     const preference = direction === 'right' ? 'like' : 'dislike';
@@ -160,6 +168,9 @@ export default function Swipe() {
       if (!likedMovies.find((m: Movie) => m.id === movie.id)) {
         const updatedLikes = [...likedMovies, movie];
         sessionStorage.setItem('likedMovies', JSON.stringify(updatedLikes));
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('likedMoviesUpdated'));
       }
     }
 
@@ -227,7 +238,6 @@ export default function Swipe() {
   };
   const getUpcomingMovies = () => currentMovies.slice(currentIndex + 1, currentIndex + 4);
 
-  const progress = (swipeCount / 20) * 100;
   const likedGenres = getLikedGenres();
 
   if (error) {
@@ -416,15 +426,6 @@ export default function Swipe() {
             Swipe right to like, left to pass. We'll learn your preferences!
           </p>
           
-          {/* Progress */}
-          <div className="max-w-md mx-auto mb-4 sm:mb-6">
-            <div className="flex justify-between items-center mb-1 sm:mb-2">
-              <span className="text-xs sm:text-sm text-gray-400">Progress</span>
-              <span className="text-xs sm:text-sm text-accent-gold">{swipeCount}/20 movies</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-
           {/* Stats */}
           <div className="flex justify-center space-x-4 sm:space-x-6 mb-4 sm:mb-8">
             <div className="text-center">
@@ -475,14 +476,12 @@ export default function Swipe() {
           <Button
             onClick={() => handleSwipe('left', getCurrentMovie())}
             className="bg-red-500 hover:bg-red-600 text-white p-4 rounded-full"
-            disabled={swipeCount >= 20}
           >
             ✕
           </Button>
           <Button
             onClick={() => handleSwipe('right', getCurrentMovie())}
             className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full"
-            disabled={swipeCount >= 20}
           >
             ♥
           </Button>

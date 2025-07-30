@@ -28,17 +28,43 @@ export default function Recommendations() {
     queryFn: () => tmdbService.getGenres(),
   });
 
-  // Load liked movies from session storage (simulating swipe preferences)
+  // Load liked movies from session storage and listen for changes
   useEffect(() => {
-    const storedLikes = sessionStorage.getItem('likedMovies');
-    if (storedLikes) {
-      try {
-        setLikedMovies(JSON.parse(storedLikes));
-      } catch (error) {
-        console.error('Error parsing liked movies:', error);
-        setLikedMovies([]);
+    const loadLikedMovies = () => {
+      const storedLikes = sessionStorage.getItem('likedMovies');
+      if (storedLikes) {
+        try {
+          setLikedMovies(JSON.parse(storedLikes));
+        } catch (error) {
+          console.error('Error parsing liked movies:', error);
+          setLikedMovies([]);
+        }
       }
-    }
+    };
+
+    // Load initially
+    loadLikedMovies();
+
+    // Listen for storage changes (when user swipes on other pages)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'likedMovies') {
+        loadLikedMovies();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom events (for same-page updates)
+    const handleCustomStorageChange = () => {
+      loadLikedMovies();
+    };
+
+    window.addEventListener('likedMoviesUpdated', handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('likedMoviesUpdated', handleCustomStorageChange);
+    };
   }, []);
 
   const movies = popularMovies?.results || [];
