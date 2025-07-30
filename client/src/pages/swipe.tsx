@@ -71,9 +71,14 @@ export default function Swipe() {
       
       try {
         // Use getPopularMovies instead of getMoviesForSwipe for now
+        console.log('Calling tmdbService.getPopularMovies with page:', randomPage);
         const response = await tmdbService.getPopularMovies(randomPage);
-        console.log('TMDB response:', response?.results?.length, 'movies');
-        return response?.results || [];
+        console.log('TMDB response object:', response);
+        console.log('TMDB response results:', response?.results);
+        console.log('TMDB response results length:', response?.results?.length);
+        const movies = response?.results || [];
+        console.log('Returning movies:', movies.length);
+        return movies;
       } catch (error) {
         console.error('Error in queryFn:', error);
         throw error;
@@ -85,16 +90,25 @@ export default function Swipe() {
   // Debug logging - simplified to avoid potential issues
   console.log('Swipe page loaded');
   console.log('Movies data:', moviesData);
+  console.log('Movies data length:', moviesData?.length);
   console.log('Current movies:', currentMovies);
+  console.log('Current movies length:', currentMovies.length);
   console.log('Current index:', currentIndex);
+  console.log('Error:', error);
+  console.log('Is loading:', isLoading);
 
   useEffect(() => {
+    console.log('useEffect triggered with moviesData:', moviesData?.length);
     if (moviesData && moviesData.length > 0) {
       // Filter out already swiped movies and shuffle the remaining ones
       const availableMovies = moviesData.filter(movie => !swipedMovieIds.has(movie.id));
+      console.log('Available movies after filtering:', availableMovies.length);
       const shuffledMovies = availableMovies.sort(() => Math.random() - 0.5);
+      console.log('Setting current movies:', shuffledMovies.length);
       setCurrentMovies(shuffledMovies);
       setCurrentIndex(0);
+    } else {
+      console.log('No movies data or empty array');
     }
   }, [moviesData, swipedMovieIds]);
 
