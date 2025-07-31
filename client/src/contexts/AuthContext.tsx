@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import type { User, AuthState, LoginCredentials, RegisterData } from '@/types/user';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, isSupabaseAvailable } from '@/lib/supabaseClient';
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -68,9 +68,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check for existing session on mount and listen for auth changes
   useEffect(() => {
     const checkAuth = async () => {
+      if (!isSupabaseAvailable()) {
+        console.log('Supabase not available, skipping auth check');
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return;
+      }
+
       try {
         // Get initial session
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase!.auth.getSession();
         if (session?.user) {
           const mappedUser = mapSupabaseUser(session.user);
           dispatch({ type: 'SET_USER', payload: mappedUser });
@@ -85,19 +91,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          const mappedUser = mapSupabaseUser(session.user);
-          dispatch({ type: 'SET_USER', payload: mappedUser });
-        } else if (event === 'SIGNED_OUT') {
-          dispatch({ type: 'LOGOUT' });
-        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-          const mappedUser = mapSupabaseUser(session.user);
-          dispatch({ type: 'SET_USER', payload: mappedUser });
-        }
+    if (isSupabaseAvailable()) {
+      const { data: { subscription } } = supabase!.auth.onAuthStateChange(
+        async (event, session) => {
+          console.log('Auth state changed:', event, session?.user?.email);
+          
+          if (event === 'SIGNED_IN' && session?.user) {
+            const mappedUser = mapSupabaseUser(session.user);
+            dispatch({ type: 'SET_USER', payload: mappedUser });
+          } else if (event === 'SIGNED_OUT') {
+            dispatch({ type: 'LOGOUT' });
+          } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+            const mappedUser = mapSupabaseUser(session.user);
+            dispatch({ type: 'SET_USER', payload: mappedUser });
+          }
       }
     );
 
@@ -105,11 +112,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
+    if (!isSupabaseAvailable()) {
+      dispatch({ type: 'SET_ERROR', payload: 'Authentication service not available. Please configure Supabase.' });
+      return;
+    }
+
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'SET_ERROR', payload: null });
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase!.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
@@ -126,6 +138,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (data: RegisterData) => {
+    if (!isSupabaseAvailable()) {
+      dispatch({ type: 'SET_ERROR', payload: 'Authentication service not available. Please configure Supabase.' });
+      return;
+    }
+
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'SET_ERROR', payload: null });
 
@@ -147,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Pre-check for existing email
-    const { data: existingEmail } = await supabase
+    const { data: existingEmail } = await supabase!
       .from('users')
       .select('id')
       .eq('email', data.email)
@@ -159,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Pre-check for existing username
-    const { data: existingUsername } = await supabase
+    const { data: existingUsername } = await supabase!
       .from('users')
       .select('id')
       .eq('username', data.username)
@@ -171,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const { data: signUpData, error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase!.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -205,13 +222,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-      dispatch({ type: 'LOGOUT' });
-    } catch (error) {
-      console.error('Logout error:', error);
-      dispatch({ type: 'LOGOUT' });
+    if (isSupabaseAvailable()) {
+      try {
+        await supabase!.auth.signOut();
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
     }
+    dispatch({ type: 'LOGOUT' });
   };
 
   const updateUser = (user: User) => {
