@@ -10,6 +10,12 @@ A modern, swipe-based movie discovery web application built with React and Vite.
 - **Modern UI**: Beautiful, responsive design with smooth animations
 - **Multi-genre Support**: Explore Hollywood and Bollywood films
 - **Real-time Data**: Powered by The Movie Database (TMDB) API
+- **🤖 AI-Powered Features**:
+  - **AI Chat Assistant**: Interactive movie expert chatbot
+  - **Mood-Based Recommendations**: Get movies based on your current mood
+  - **Personalized Movie Analysis**: AI analysis of movies based on your taste
+  - **Movie Trivia Generator**: Generate interesting facts about any movie
+  - **Smart Watchlist Suggestions**: AI-powered watchlist recommendations
 
 ## Tech Stack
 
@@ -42,10 +48,13 @@ A modern, swipe-based movie discovery web application built with React and Vite.
    ```
 
 3. **Environment Setup**
-   Create a `.env` file in the root directory:
+   Create a `.env` file in the `client/` directory:
    ```env
    # TMDB API
    VITE_TMDB_API_KEY=your_tmdb_api_key
+   
+   # OpenAI API (Optional - for AI features)
+   VITE_OPENAI_API_KEY=your_openai_api_key
    ```
 
 4. **Start Development Server**
@@ -81,7 +90,8 @@ popcorn-picks/
 
 ## API Endpoints
 
-- All movie data is fetched directly from [The Movie Database (TMDB) API](https://www.themoviedb.org/documentation/api).
+- **Movie Data**: Fetched directly from [The Movie Database (TMDB) API](https://www.themoviedb.org/documentation/api)
+- **AI Features**: Powered by [OpenAI GPT-3.5 API](https://platform.openai.com/docs) (optional)
 - No backend or custom API endpoints are used.
 
 ## Data Storage
@@ -115,5 +125,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - [The Movie Database (TMDB)](https://www.themoviedb.org/) for movie data
+- [OpenAI](https://openai.com/) for AI-powered features
 - [Shadcn/ui](https://ui.shadcn.com/) for beautiful UI components
 - [Framer Motion](https://www.framer.com/motion/) for animations 
