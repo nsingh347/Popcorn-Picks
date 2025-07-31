@@ -6,12 +6,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CouplesProvider } from "@/contexts/CouplesContext";
 import { Navigation } from "@/components/navigation";
+import { AIChat } from "@/components/ai-chat";
 import Landing from "@/pages/landing";
 import Swipe from "@/pages/swipe";
 import Recommendations from "@/pages/recommendations";
 import Watchlist from "@/pages/watchlist";
 import Couples from "@/pages/couples";
 import CoupleRecommendations from "@/pages/couples/recommendations";
+import AIRecommendations from "@/pages/ai-recommendations";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import NotFound from "@/pages/not-found";
@@ -110,6 +112,7 @@ function Router() {
         <Route path="/discover" component={Discover} />
         <Route path="/swipe" component={() => <ProtectedRoute component={Swipe} />} />
         <Route path="/recommendations" component={() => <ProtectedRoute component={Recommendations} />} />
+        <Route path="/ai-recommendations" component={() => <ProtectedRoute component={AIRecommendations} />} />
         <Route path="/watchlist" component={() => <ProtectedRoute component={Watchlist} />} />
         <Route path="/couples" component={Couples} />
         <Route path="/couples/recommendations" component={CoupleRecommendations} />
@@ -139,6 +142,9 @@ export default function App() {
                         </ErrorBoundary>
                         <ErrorBoundary>
                           <Router />
+                        </ErrorBoundary>
+                        <ErrorBoundary>
+                          <AIChat />
                         </ErrorBoundary>
                         <ErrorBoundary>
                           <Toaster />

@@ -30,6 +30,7 @@ export function Navigation() {
     { href: '/discover', label: 'Discover' },
     { href: '/swipe', label: 'Swipe' },
     { href: '/recommendations', label: 'Recommendations' },
+    { href: '/ai-recommendations', label: 'AI Recommendations', icon: Sparkles },
     { href: '/watchlist', label: 'Watchlist' },
     { href: '/couples', label: 'Couples', icon: currentRelationship ? Heart : Users }
   ];

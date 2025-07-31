@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Calendar, Clock, Heart, Plus, Play } from 'lucide-react';
+import { X, Star, Calendar, Clock, Heart, Plus, Play, Sparkles, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { tmdbService } from '@/services/tmdb';
 import { useWatchlist } from '@/hooks/use-watchlist';
+import { OpenAIService } from '@/services/openai';
 import type { MovieDetails } from '@/types/movie';
 import { useQuery } from '@tanstack/react-query';
 
@@ -19,6 +20,8 @@ interface MovieDetailModalProps {
 export function MovieDetailModal({ movieId, isOpen, onClose }: MovieDetailModalProps) {
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string>('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const { data: movie, isLoading, error } = useQuery({
     queryKey: ['movie-details', movieId],
@@ -57,6 +60,31 @@ export function MovieDetailModal({ movieId, isOpen, onClose }: MovieDetailModalP
       video => video.type === 'Trailer' && video.site === 'YouTube'
     );
     return trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null;
+  };
+
+  const handleAIAnalysis = async () => {
+    if (!movie) return;
+    
+    setIsAnalyzing(true);
+    try {
+      // Get user's liked movies for context
+      const likedMoviesData = sessionStorage.getItem('likedMovies');
+      const likedMovies: any[] = likedMoviesData ? JSON.parse(likedMoviesData) : [];
+      const userPreferences = likedMovies.map(m => m.title);
+      
+      const analysis = await OpenAIService.analyzeMovie({
+        movieTitle: movie.title,
+        movieDescription: movie.overview,
+        userPreferences
+      });
+      
+      setAiAnalysis(analysis);
+    } catch (error) {
+      console.error('AI Analysis error:', error);
+      setAiAnalysis('Sorry, I could not analyze this movie at the moment. Please try again later.');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   useEffect(() => {
@@ -207,7 +235,39 @@ export function MovieDetailModal({ movieId, isOpen, onClose }: MovieDetailModalP
                       Watch Trailer
                     </Button>
                   )}
+
+                  <Button
+                    onClick={handleAIAnalysis}
+                    disabled={isAnalyzing}
+                    variant="outline"
+                    className="border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="w-4 h-4 mr-2" />
+                        AI Analysis
+                      </>
+                    )}
+                  </Button>
                 </div>
+
+                {/* AI Analysis */}
+                {aiAnalysis && (
+                  <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Sparkles className="w-5 h-5 text-purple-400" />
+                      <h3 className="text-lg font-semibold text-purple-400">AI Analysis</h3>
+                    </div>
+                    <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                      {aiAnalysis}
+                    </div>
+                  </div>
+                )}
 
                 {/* Streaming Platforms */}
                 <div className="mt-4">
