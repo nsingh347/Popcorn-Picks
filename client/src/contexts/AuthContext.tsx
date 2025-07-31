@@ -91,8 +91,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
 
     // Listen for auth changes
+    let subscription: any = null;
     if (isSupabaseAvailable()) {
-      const { data: { subscription } } = supabase!.auth.onAuthStateChange(
+      const { data } = supabase!.auth.onAuthStateChange(
         async (event, session) => {
           console.log('Auth state changed:', event, session?.user?.email);
           
@@ -105,10 +106,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const mappedUser = mapSupabaseUser(session.user);
             dispatch({ type: 'SET_USER', payload: mappedUser });
           }
-      }
-    );
+        }
+      );
+      subscription = data.subscription;
+    }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
