@@ -29,6 +29,9 @@ export function AIChat() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
+  // Debug logging
+  console.log('AIChat component rendered, OpenAI available:', isOpenAIAvailable());
+
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;

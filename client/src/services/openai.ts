@@ -1,8 +1,14 @@
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || '';
 
+// Debug logging
+console.log('OpenAI API Key loaded:', OPENAI_API_KEY ? 'Yes (length: ' + OPENAI_API_KEY.length + ')' : 'No');
+console.log('Environment check:', import.meta.env.VITE_OPENAI_API_KEY ? 'Available' : 'Not available');
+
 // Check if OpenAI API is available
 export const isOpenAIAvailable = () => {
-  return !!OPENAI_API_KEY && OPENAI_API_KEY !== 'your_openai_api_key_here';
+  const available = !!OPENAI_API_KEY && OPENAI_API_KEY !== 'your_openai_api_key_here';
+  console.log('OpenAI API Available:', available);
+  return available;
 };
 
 interface MovieRecommendationRequest {
